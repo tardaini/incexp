@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Tracker with ITR & Loan Balance Sheet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDKs (v10 Compat for CDN usage in a single HTML file) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
+    <style>
+        @media print {
+            body { background: white; color: black; font-size: 11pt; }
+            header, nav, .no-print, .section-panel:not(#sec-history):not(#sec-balance-sheet) { display: none !important; }
+            #sec-history, #sec-balance-sheet { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+            .print-only { display: block !important; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+            .shadow-md { box-shadow: none !important; border: none !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <div id="app-content">
+        <header class="bg-indigo-600 text-white shadow-md py-4">
+            <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-2xl font-bold">💰 Financial & Expense Tracker</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="balance-summary" class="text-base font-semibold bg-indigo-700 px-4 py-2 rounded-lg">
+                        Net Balance: <span id="net-balance">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <nav class="bg-white shadow-md sticky top-0 z-40 no-print">
+            <div class="container mx-auto px-4 flex overflow-x-auto space-x-2 md:space-x-4 py-3">
+                <button onclick="switchSection('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 font-semibold rounded-lg bg-indigo-600 text-white transition whitespace-nowrap">Dashboard</button>
+                <button onclick="switchSection('add-transaction')" id="nav-add-transaction" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Add Transaction</button>
+                <button onclick="switchSection('categories')" id="nav-categories" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Manage Categories</button>
+                <button onclick="switchSection('reports')" id="nav-reports" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Reports & Charts</button>
+                <button onclick="switchSection('history')" id="nav-history" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Transaction History & Print</button>
+                <button onclick="switchSection('balance-sheet')" id="nav-balance-sheet" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Loan & Balance Sheet</button>
+                <button onclick="switchSection('backup-restore')" id="nav-backup-restore" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Backup & Restore</button>
+            </div>
+        </nav>
+
+        <main class="container mx-auto px-4 py-6 max-w-6xl">
+
+            <section id="sec-dashboard" class="section-panel space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Welcome to Your Financial Overview</h2>
+                    <p class="text-gray-600 mb-4">Track incomes, expenses, remarks, and review graphical reporting sheets.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+                            <p class="text-sm font-medium text-indigo-600">Total Entries</p>
+                            <p id="dash-total-count" class="text-2xl font-bold text-indigo-900">0</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <p class="text-sm font-medium text-green-600">Total Income</p>
+                            <p id="dash-total-income" class="text-2xl font-bold text-green-900">₹0.00</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <p class="text-sm font-medium text-red-600">Total Expense</p>
+                            <p id="dash-total-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-add-transaction" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Record New Transaction</h2>
+                    <form id="transaction-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Type</label>
+                            <select id="type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="updateCategoryOptions()">
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Category</label>
+                            <select id="category" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Amount (₹)</label>
+                            <input type="number" id="amount" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Date</label>
+                            <input type="date" id="date" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Remark / Description</label>
+                            <input type="text" id="remark" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Client meeting lunch, monthly payout">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Attach Receipt (Cloud Storage)</label>
+                            <input type="file" id="receipt" accept="image/*" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                            Save Transaction
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="sec-categories" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Define Custom Categories</h2>
+                    <form id="category-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Category Type</label>
+                            <select id="new-cat-type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500">
+                                <option value="income">Income</option>
+                                <option value="expense">Expense</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Category Name</label>
+                            <input type="text" id="new-cat-name" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Freelance, Groceries, Rent" required>
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition">
+                            Add Category Definition
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="sec-reports" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl font-semibold text-gray-700">Date Range Filter for Reports</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                            <input type="date" id="filter-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyFilters()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                            <input type="date" id="filter-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyFilters()">
+                        </div>
+                        <div>
+                            <button onclick="resetFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                                Reset Dates
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Visual Pie Charts</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div class="relative h-64 flex justify-center items-center">
+                            <canvas id="incomePieChart"></canvas>
+                        </div>
+                        <div class="relative h-64 flex justify-center items-center">
+                            <canvas id="expensePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-history" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl font-semibold text-gray-700">History Filter & Print</h2>
+                        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                            🖨️ Print Filtered History
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                            <input type="date" id="hist-filter-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                            <input type="date" id="hist-filter-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
+                        </div>
+                        <div>
+                            <button onclick="resetHistoryFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                                Reset Dates
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="print-only">
+                    <h1 class="text-2xl font-bold">Transaction History Statement</h1>
+                    <p class="text-sm text-gray-600">Filtered Date Range: <span id="print-range-label">All Time</span></p>
+                    <p class="text-sm text-gray-600 mt-1 mb-2"><strong>Total Net for Range:</strong> <span id="print-range-net">₹0.00</span></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2 no-print">Transaction List Records</h2>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                    <th class="py-3 px-3">Date</th>
+                                    <th class="py-3 px-3">Type</th>
+                                    <th class="py-3 px-3">Category</th>
+                                    <th class="py-3 px-3">Amount</th>
+                                    <th class="py-3 px-3">Remark</th>
+                                    <th class="py-3 px-3">Receipt</th>
+                                    <th class="py-3 px-3 text-center no-print">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transaction-table-body" class="text-gray-600 text-sm font-light"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-balance-sheet" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h2 class="text-xl font-semibold text-gray-700">Manage Loans & Borrowed Liabilities</h2>
+                        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                            🖨️ Print Tax Balance Sheet
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">Add your active business/personal loans or credit lines below. This automatically factors into total liabilities for your tax net-worth and ITR balance calculations.</p>
+                    
+                    <form id="loan-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Loan / Lender Name</label>
+                            <input type="text" id="loan-name" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., HDFC Car Loan, Bank OD" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Principal / Balance Outstanding (₹)</label>
+                            <input type="number" id="loan-amount" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Interest Rate (% p.a.)</label>
+                            <input type="number" id="loan-rate" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 8.5">
+                        </div>
+                        <div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                                Add Loan Liability
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="print-only">
+                    <h1 class="text-2xl font-bold">STATEMENT OF ASSETS & LIABILITIES (BALANCE SHEET)</h1>
+                    <p class="text-sm text-gray-600 mt-1">Prepared for Tax / ITR / Loan Application Purpose</p>
+                    <p class="text-sm text-gray-600">Statement Date: <span id="bs-print-date"></span></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="text-xl font-semibold text-gray-800">Financial Position Summary</h2>
+                        <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full uppercase">Tax & Loan Ready Format</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border rounded-lg p-4 bg-gray-50 space-y-3">
+                            <h3 class="font-bold text-gray-700 border-b pb-2 text-lg">ASSETS (Current & Liquid)</h3>
+                            <div class="flex justify-between text-sm py-1">
+                                <span class="text-gray-600">Net Cash & Bank Balance (All-Time Net):</span>
+                                <span id="bs-asset-cash" class="font-semibold text-green-600">₹0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm py-1">
+                                <span class="text-gray-600">Total Recorded Incomes (Lifetime):</span>
+                                <span id="bs-asset-income" class="font-semibold">₹0.00</span>
+                            </div>
+                            <div class="border-t pt-2 flex justify-between font-bold text-base text-gray-800">
+                                <span>Total Assets:</span>
+                                <span id="bs-total-assets">₹0.00</span>
+                            </div>
+                        </div>
+
+                        <div class="border rounded-lg p-4 bg-gray-50 space-y-3">
+                            <h3 class="font-bold text-gray-700 border-b pb-2 text-lg">LIABILITIES (Loans & Debt)</h3>
+                            <div class="overflow-x-auto max-h-36">
+                                <table class="w-full text-left text-xs">
+                                    <thead>
+                                        <tr class="text-gray-500 border-b">
+                                            <th class="py-1">Lender / Facility</th>
+                                            <th class="py-1">Rate</th>
+                                            <th class="py-1">Outstanding (₹)</th>
+                                            <th class="py-1 text-center no-print">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="loan-table-body"></tbody>
+                                </table>
+                            </div>
+                            <div class="border-t pt-2 flex justify-between font-bold text-base text-red-600">
+                                <span>Total Liabilities:</span>
+                                <span id="bs-total-liabilities">₹0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h4 class="font-bold text-indigo-900 text-lg">Net Worth / Capital Account (Assets minus Liabilities)</h4>
+                            <p class="text-xs text-indigo-700">This valuation represents your total declared financial standing for bank verification & ITR wealth schedules.</p>
+                        </div>
+                        <div id="bs-net-worth" class="text-2xl font-bold text-indigo-900">
+                            ₹0.00
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="sec-backup-restore" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto space-y-6">
+                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Data Backup & Restore</h2>
+                    <p class="text-sm text-gray-600">Export your complete financial records, categories, and loan data into a secure backup file, or restore them from a previous save.</p>
+                    
+                    <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+                        <h3 class="font-bold text-gray-700">Backup Data</h3>
+                        <p class="text-xs text-gray-600">Download a JSON file containing all your transactional records and settings.</p>
+                        <button onclick="exportDataBackup()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                            Download Backup File 📥
+                        </button>
+                    </div>
+
+                    <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
+                        <h3 class="font-bold text-gray-700">Restore Data</h3>
+                        <p class="text-xs text-gray-600">Select a previously exported JSON backup file to restore your data. <span class="text-red-600 font-semibold">Warning: This will overwrite current cloud records.</span></p>
+                        <input type="file" id="restore-file-input" accept=".json" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <button onclick="importDataRestore()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition">
+                            Upload & Restore Data 📤
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white p-4 rounded-lg max-w-lg w-full relative">
+            <button onclick="closeReceiptModal()" class="absolute top-2 right-3 text-gray-600 font-bold text-xl">&times;</button>
+            <h3 class="text-lg font-semibold mb-2">Receipt Attachment</h3>
+            <div id="modal-content-area" class="flex justify-center items-center"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration & Initialization ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_47_mSsne5rpg-yECnu5RybLgHyQ8erQ",
+            authDomain: "ieapp-64fe9.firebaseapp.com",
+            projectId: "ieapp-64fe9",
+            storageBucket: "ieapp-64fe9.firebasestorage.app",
+            messagingSenderId: "732866254948",
+            appId: "1:732866254948:web:2d8ba09a7f34d24c45a771",
+            measurementId: "G-H6PCQJ4GDB"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        firebase.analytics();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Single shared document ID for cloud storage without login
+        const SHARED_DOC_ID = "default_user_data";
+
+        let categories = {
+            income: ['Salary', 'Investments', 'Gifts'],
+            expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport']
+        };
+        let transactions = [];
+        let loans = [];
+        let incomePieChartInstance = null;
+        let expensePieChartInstance = null;
+
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('bs-print-date').textContent = new Date().toLocaleDateString();
+
+        // Load data directly from Firestore on startup
+        async function loadUserDataFromFirebase() {
+            try {
+                const doc = await db.collection('app_data').doc(SHARED_DOC_ID).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    categories = data.categories || categories;
+                    transactions = data.transactions || [];
+                    loans = data.loans || [];
+                }
+            } catch (err) {
+                console.error('Failed to load from Firebase:', err);
+            }
+        }
+
+        async function saveDataToFirebase() {
+            try {
+                await db.collection('app_data').doc(SHARED_DOC_ID).set({
+                    categories: categories,
+                    transactions: transactions,
+                    loans: loans
+                }, { merge: true });
+            } catch (err) {
+                console.error('Failed to sync to Firebase:', err);
+                alert('Failed to sync data to Firebase Cloud.');
+            }
+        }
+
+        // --- Core App Logic ---
+        function switchSection(sectionId) {
+            document.querySelectorAll('.section-panel').forEach(panel => panel.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+
+            document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${sectionId}`);
+            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+            activeBtn.classList.add('bg-indigo-600', 'text-white');
+
+            if (sectionId === 'reports') {
+                applyFilters();
+            } else if (sectionId === 'history') {
+                applyHistoryFilters();
+            } else if (sectionId === 'balance-sheet') {
+                renderBalanceSheet();
+            }
+        }
+
+        async function initApp() {
+            await loadUserDataFromFirebase();
+            updateCategoryOptions();
+            applyFilters();
+            applyHistoryFilters();
+            renderBalanceSheet();
+        }
+
+        function updateCategoryOptions() {
+            const type = document.getElementById('type').value;
+            const categorySelect = document.getElementById('category');
+            categorySelect.innerHTML = '';
+
+            if (categories[type]) {
+                categories[type].forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+
+        document.getElementById('transaction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const date = document.getElementById('date').value;
+            const remark = document.getElementById('remark').value.trim();
+            const receiptFile = document.getElementById('receipt').files[0];
+
+            if (!amount || !date) return;
+
+            const transactionId = Date.now();
+
+            const processTransaction = async (receiptUrl = null) => {
+                const newTransaction = {
+                    id: transactionId,
+                    type,
+                    category,
+                    amount,
+                    date,
+                    remark: remark || '-',
+                    receipt: receiptUrl
+                };
+
+                transactions.push(newTransaction);
+                await saveAndRefresh();
+                this.reset();
+                document.getElementById('date').valueAsDate = new Date();
+                updateCategoryOptions();
+                alert('Transaction recorded to Cloud!');
+                switchSection('history');
+            };
+
+            if (receiptFile) {
+                try {
+                    // Upload file to Firebase Storage bucket
+                    const storageRef = storage.ref(`receipts/${transactionId}_${receiptFile.name}`);
+                    const snapshot = await storageRef.put(receiptFile);
+                    const downloadUrl = await snapshot.ref.getDownloadURL();
+                    await processTransaction(downloadUrl);
+                } catch (err) {
+                    console.error("Error uploading file to Firebase Storage:", err);
+                    alert("Failed to upload receipt file to cloud storage. Saving transaction without receipt.");
+                    await processTransaction(null);
+                }
+            } else {
+                await processTransaction(null);
+            }
+        });
+
+        // Loan form submission
+        document.getElementById('loan-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('loan-name').value.trim();
+            const amount = parseFloat(document.getElementById('loan-amount').value);
+            const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
+
+            if (!name || isNaN(amount)) return;
+
+            const newLoan = {
+                id: Date.now(),
+                name,
+                amount,
+                rate
+            };
+
+            loans.push(newLoan);
+            await saveDataToFirebase();
+            renderBalanceSheet();
+            this.reset();
+            alert('Loan liability saved to cloud!');
+        });
+
+        async function deleteLoan(id) {
+            loans = loans.filter(l => l.id !== id);
+            await saveDataToFirebase();
+            renderBalanceSheet();
+        }
+
+        document.getElementById('category-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const type = document.getElementById('new-cat-type').value;
+            const name = document.getElementById('new-cat-name').value.trim();
+
+            if (name && !categories[type].includes(name)) {
+                categories[type].push(name);
+                await saveDataToFirebase();
+                updateCategoryOptions();
+                alert(`Category "${name}" defined successfully!`);
+                this.reset();
+            } else {
+                alert('Category already exists or invalid name.');
+            }
+        });
+
+        async function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            await saveAndRefresh();
+        }
+
+        async function saveAndRefresh() {
+            await saveDataToFirebase();
+            applyFilters();
+            applyHistoryFilters();
+            renderBalanceSheet();
+        }
+
+        function getFilteredTransactions() {
+            const startDate = document.getElementById('filter-start').value;
+            const endDate = document.getElementById('filter-end').value;
+
+            return transactions.filter(t => {
+                if (startDate && t.date < startDate) return false;
+                if (endDate && t.date > endDate) return false;
+                return true;
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-start').value = '';
+            document.getElementById('filter-end').value = '';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const filtered = getFilteredTransactions();
+            updateMetrics(filtered);
+            renderCharts(filtered);
+        }
+
+        function getFilteredHistoryTransactions() {
+            const startDate = document.getElementById('hist-filter-start').value;
+            const endDate = document.getElementById('hist-filter-end').value;
+
+            return transactions.filter(t => {
+                if (startDate && t.date < startDate) return false;
+                if (endDate && t.date > endDate) return false;
+                return true;
+            });
+        }
+
+        function resetHistoryFilters() {
+            document.getElementById('hist-filter-start').value = '';
+            document.getElementById('hist-filter-end').value = '';
+            applyHistoryFilters();
+        }
+
+        function applyHistoryFilters() {
+            const filtered = getFilteredHistoryTransactions();
+            
+            const startStr = document.getElementById('hist-filter-start').value || 'Beginning';
+            const endStr = document.getElementById('hist-filter-end').value || 'Present';
+            document.getElementById('print-range-label').textContent = `${startStr} to ${endStr}`;
+
+            let rangeIncome = 0, rangeExpense = 0;
+            filtered.forEach(t => {
+                if (t.type === 'income') rangeIncome += t.amount;
+                else rangeExpense += t.amount;
+            });
+            const rangeNet = rangeIncome - rangeExpense;
+            document.getElementById('print-range-net').textContent = `₹${rangeNet.toFixed(2)}`;
+
+            renderTransactionsList(filtered);
+        }
+
+        function updateMetrics(filteredTransactions) {
+            let totalIncome = 0;
+            let totalExpense = 0;
+
+            let allIncome = 0, allExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'income') allIncome += t.amount;
+                else allExpense += t.amount;
+            });
+            const netAll = allIncome - allExpense;
+            document.getElementById('net-balance').textContent = `₹${netAll.toFixed(2)}`;
+
+            filteredTransactions.forEach(t => {
+                if (t.type === 'income') totalIncome += t.amount;
+                else totalExpense += t.amount;
+            });
+
+            document.getElementById('dash-total-count').textContent = filteredTransactions.length;
+            document.getElementById('dash-total-income').textContent = `₹${totalIncome.toFixed(2)}`;
+            document.getElementById('dash-total-expense').textContent = `₹${totalExpense.toFixed(2)}`;
+        }
+
+        function renderTransactionsList(filteredTransactions) {
+            const tbody = document.getElementById('transaction-table-body');
+            tbody.innerHTML = '';
+
+            const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (sorted.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-400">No transactions recorded for this range.</td></tr>`;
+                return;
+            }
+
+            sorted.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-gray-200 hover:bg-gray-50";
+                
+                let receiptCell = '<span class="text-gray-400 italic">None</span>';
+                if (t.receipt) {
+                    receiptCell = `<a href="${t.receipt}" target="_blank" class="text-indigo-600 underline font-medium hover:text-indigo-800">View File</a>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3">${t.date}</td>
+                    <td class="py-3 px-3 uppercase font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">${t.type}</td>
+                    <td class="py-3 px-3">${t.category}</td>
+                    <td class="py-3 px-3 font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                        ${t.type === 'income' ? '+' : '-'}₹${t.amount.toFixed(2)}
+                    </td>
+                    <td class="py-3 px-3 text-gray-700 italic">${t.remark || '-'}</td>
+                    <td class="py-3 px-3">${receiptCell}</td>
+                    <td class="py-3 px-3 text-center no-print">
+                        <button onclick="deleteTransaction(${t.id})" class="text-red-500 hover:text-red-700 font-semibold">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderBalanceSheet() {
+            let totalIncome = 0;
+            let totalExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'income') totalIncome += t.amount;
+                else totalExpense += t.amount;
+            });
+            const netCash = totalIncome - totalExpense;
+
+            document.getElementById('bs-asset-cash').textContent = `₹${netCash.toFixed(2)}`;
+            document.getElementById('bs-asset-income').textContent = `₹${totalIncome.toFixed(2)}`;
+            document.getElementById('bs-total-assets').textContent = `₹${netCash.toFixed(2)}`;
+
+            const loanTbody = document.getElementById('loan-table-body');
+            loanTbody.innerHTML = '';
+
+            let totalLiabilities = 0;
+            if (loans.length === 0) {
+                loanTbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-gray-400 italic">No loan liabilities recorded</td></tr>`;
+            } else {
+                loans.forEach(l => {
+                    totalLiabilities += l.amount;
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b hover:bg-gray-50";
+                    tr.innerHTML = `
+                        <td class="py-2 font-medium">${l.name}</td>
+                        <td class="py-2">${l.rate}%</td>
+                        <td class="py-2 font-semibold text-red-600">₹${l.amount.toFixed(2)}</td>
+                        <td class="py-2 text-center no-print">
+                            <button onclick="deleteLoan(${l.id})" class="text-red-500 hover:text-red-700">Delete</button>
+                        </td>
+                    `;
+                    loanTbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('bs-total-liabilities').textContent = `₹${totalLiabilities.toFixed(2)}`;
+
+            const netWorth = netCash - totalLiabilities;
+            const netWorthEl = document.getElementById('bs-net-worth');
+            netWorthEl.textContent = `₹${netWorth.toFixed(2)}`;
+            if (netWorth < 0) {
+                netWorthEl.className = "text-2xl font-bold text-red-600";
+            } else {
+                netWorthEl.className = "text-2xl font-bold text-indigo-900";
+            }
+        }
+
+        function viewReceipt(url) {
+            const modal = document.getElementById('receipt-modal');
+            const contentArea = document.getElementById('modal-content-area');
+            contentArea.innerHTML = `<a href="${url}" target="_blank" class="text-indigo-600 underline font-bold">Open Attached Receipt in New Tab</a>`;
+            modal.classList.remove('hidden');
+        }
+
+        function closeReceiptModal() {
+            document.getElementById('receipt-modal').classList.add('hidden');
+        }
+
+        function renderCharts(filteredTransactions) {
+            const incomeCategories = categories.income || [];
+            const incomeDataMap = {};
+            incomeCategories.forEach(cat => incomeDataMap[cat] = 0);
+
+            filteredTransactions.filter(t => t.type === 'income').forEach(t => {
+                if (incomeDataMap[t.category] !== undefined) incomeDataMap[t.category] += t.amount;
+            });
+
+            const incomeCtx = document.getElementById('incomePieChart').getContext('2d');
+            if (incomePieChartInstance) incomePieChartInstance.destroy();
+
+            incomePieChartInstance = new Chart(incomeCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(incomeDataMap),
+                    datasets: [{
+                        data: Object.values(incomeDataMap),
+                        backgroundColor: ['#34d399', '#60a5fa', '#38bdf8', '#818cf8', '#c084fc']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                        title: { display: true, text: 'Income Breakdown Pie Chart' }
+                    }
+                }
+            });
+
+            const expenseCategories = categories.expense || [];
+            const expenseDataMap = {};
+            expenseCategories.forEach(cat => expenseDataMap[cat] = 0);
+
+            filteredTransactions.filter(t => t.type === 'expense').forEach(t => {
+                if (expenseDataMap[t.category] !== undefined) expenseDataMap[t.category] += t.amount;
+            });
+
+            const expenseCtx = document.getElementById('expensePieChart').getContext('2d');
+            if (expensePieChartInstance) expensePieChartInstance.destroy();
+
+            expensePieChartInstance = new Chart(expenseCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(expenseDataMap),
+                    datasets: [{
+                        data: Object.values(expenseDataMap),
+                        backgroundColor: ['#f87171', '#fb923c', '#fbbf24', '#f472b6', '#a78bfa']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
+                        title: { display: true, text: 'Expense Breakdown Pie Chart' }
+                    }
+                }
+            });
+        }
+
+        function exportDataBackup() {
+            const backupData = {
+                version: "1.0",
+                exportDate: new Date().toISOString(),
+                categories: categories,
+                transactions: transactions,
+                loans: loans
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `financial_tracker_backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDataRestore() {
+            const fileInput = document.getElementById('restore-file-input');
+            if (!fileInput.files.length) {
+                alert('Please select a valid JSON backup file first.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.categories || !imported.transactions || !imported.loans) {
+                        throw new Error('Invalid backup file structure.');
+                    }
+
+                    categories = imported.categories;
+                    transactions = imported.transactions;
+                    loans = imported.loans;
+
+                    await saveDataToFirebase();
+                    initApp();
+                    alert('Data restored to cloud successfully!');
+                    switchSection('dashboard');
+                } catch (error) {
+                    alert('Failed to restore data. The file format is invalid or corrupted.');
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Initialize App on Load
+        initApp();
+    </script>
+</body>
+</html>
