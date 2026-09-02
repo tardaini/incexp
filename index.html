@@ -9,22 +9,34 @@
     
     <!-- Firebase SDKs (v10 Compat for CDN usage in a single HTML file) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
     <style>
         @media print {
             body { background: white; color: black; font-size: 11pt; }
-            header, nav, .no-print, .section-panel:not(#sec-history):not(#sec-balance-sheet) { display: none !important; }
-            #sec-history, #sec-balance-sheet { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
-            .print-only { display: block !important; margin-bottom: 20px; }
+            header, nav, .no-print { display: none !important; }
+            .section-panel { display: none !important; }
+            
+            /* Print History Mode */
+            body.printing-history #sec-history { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+            body.printing-history .print-only-history { display: block !important; margin-bottom: 20px; }
+
+            /* Print Category Breakdown Mode */
+            body.printing-category #sec-category-report { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+            body.printing-category .print-only-category { display: block !important; margin-bottom: 20px; }
+
+            /* Print Balance Sheet Mode */
+            body.printing-balance #sec-balance-sheet { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+            body.printing-balance .print-only-balance { display: block !important; margin-bottom: 20px; }
+
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
             th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
             th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
             .shadow-md { box-shadow: none !important; border: none !important; }
         }
-        .print-only { display: none; }
+        .print-only-history, .print-only-category, .print-only-balance { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
@@ -49,6 +61,7 @@
                 <button onclick="switchSection('add-transaction')" id="nav-add-transaction" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Add Transaction</button>
                 <button onclick="switchSection('categories')" id="nav-categories" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Manage Categories</button>
                 <button onclick="switchSection('reports')" id="nav-reports" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Reports & Charts</button>
+                <button onclick="switchSection('category-report')" id="nav-category-report" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Category Summary</button>
                 <button onclick="switchSection('history')" id="nav-history" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Transaction History</button>
                 <button onclick="switchSection('balance-sheet')" id="nav-balance-sheet" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Loan & Balance Sheet</button>
                 <button onclick="switchSection('backup-restore')" id="nav-backup-restore" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Backup & Restore</button>
@@ -58,21 +71,34 @@
         <main class="container mx-auto px-4 py-6 max-w-6xl">
 
             <section id="sec-dashboard" class="section-panel space-y-6">
+                <!-- Upper Section: Current Month Income and Expense -->
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Welcome to Your Financial Overview</h2>
-                    <p class="text-gray-600 mb-4">Track incomes, expenses, remarks, and review graphical reporting sheets.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                            <p class="text-sm font-medium text-indigo-600">Total Entries</p>
-                            <p id="dash-total-count" class="text-2xl font-bold text-indigo-900">0</p>
-                        </div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Current Month Financial Overview</h2>
+                    <p class="text-gray-600 mb-4">Track incomes and expenses for the current calendar month.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                            <p class="text-sm font-medium text-green-600">Total Income</p>
-                            <p id="dash-total-income" class="text-2xl font-bold text-green-900">₹0.00</p>
+                            <p class="text-sm font-medium text-green-600">Current Month Income</p>
+                            <p id="dash-month-income" class="text-2xl font-bold text-green-900">₹0.00</p>
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                            <p class="text-sm font-medium text-red-600">Total Expense</p>
-                            <p id="dash-total-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
+                            <p class="text-sm font-medium text-red-600">Current Month Expense</p>
+                            <p id="dash-month-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lower Section: All Time Income and Expenses -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">All Time Financial Overview</h2>
+                    <p class="text-gray-600 mb-4">Track lifetime incomes and expenses.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <p class="text-sm font-medium text-green-600">All Time Total Income</p>
+                            <p id="dash-all-income" class="text-2xl font-bold text-green-900">₹0.00</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <p class="text-sm font-medium text-red-600">All Time Total Expense</p>
+                            <p id="dash-all-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
                         </div>
                     </div>
                 </div>
@@ -114,8 +140,8 @@
                             <input type="text" id="remark" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Client meeting lunch, monthly payout">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Attach Receipt (Cloud Storage)</label>
-                            <input type="file" id="receipt" accept="image/*" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Upload Receipt (Gallery / Camera)</label>
+                            <input type="file" id="receipt-file" accept="image/*" capture="environment" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                         </div>
                         <div class="flex gap-2">
                             <button type="submit" id="form-submit-btn" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
@@ -186,15 +212,97 @@
                 </div>
             </section>
 
+            <!-- New Category Summary Tab Section -->
+            <section id="sec-category-report" class="section-panel hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md no-print">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2 gap-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Category-Wise Records & Totals</h2>
+                        <button onclick="printCategoryReport()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                            🖨️ Print Category Report
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">View your total income and expenses grouped by category between specific dates or for all time.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date (Optional)</label>
+                            <input type="date" id="cat-rep-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date (Optional)</label>
+                            <input type="date" id="cat-rep-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Record Type</label>
+                            <select id="cat-rep-type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                                <option value="all">All (Income & Expense)</option>
+                                <option value="income">Income Only</option>
+                                <option value="expense">Expense Only</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button onclick="resetCategoryReportFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                                Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="print-only-category">
+                    <h1 class="text-2xl font-bold">Category-Wise Financial Statement</h1>
+                    <p class="text-sm text-gray-600">Date Range: <span id="print-cat-range-label">All Time</span></p>
+                </div>
+
+                <!-- Summary Tables by Category -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Income Category Breakdown -->
+                    <div id="cat-income-container" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-lg font-bold text-green-700">Income by Category</h3>
+                            <span id="cat-total-income-sum" class="font-bold text-green-700">₹0.00</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                        <th class="py-2 px-3">Category</th>
+                                        <th class="py-2 px-3 text-right">Total Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cat-income-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Expense Category Breakdown -->
+                    <div id="cat-expense-container" class="bg-white p-6 rounded-lg shadow-md space-y-4">
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <h3 class="text-lg font-bold text-red-700">Expenses by Category</h3>
+                            <span id="cat-total-expense-sum" class="font-bold text-red-700">₹0.00</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead>
+                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                        <th class="py-2 px-3">Category</th>
+                                        <th class="py-2 px-3 text-right">Total Amount (₹)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cat-expense-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <section id="sec-history" class="section-panel hidden space-y-6">
                 <div class="bg-white p-6 rounded-lg shadow-md no-print">
                     <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 class="text-xl font-semibold text-gray-700">History Filter & Print</h2>
-                        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                        <h2 class="text-xl font-semibold text-gray-700">History Filter, Search & Print</h2>
+                        <button onclick="printHistory()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
                             🖨️ Print Filtered History
                         </button>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
                             <label class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
                             <input type="date" id="hist-filter-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
@@ -204,14 +312,18 @@
                             <input type="date" id="hist-filter-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-600 mb-1">Search Keyword</label>
+                            <input type="text" id="hist-search-box" placeholder="Search category, remark, amount..." class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" oninput="applyHistoryFilters()">
+                        </div>
+                        <div>
                             <button onclick="resetHistoryFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
-                                Reset Dates
+                                Reset Filters
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="print-only">
+                <div class="print-only-history">
                     <h1 class="text-2xl font-bold">Transaction History Statement</h1>
                     <p class="text-sm text-gray-600">Filtered Date Range: <span id="print-range-label">All Time</span></p>
                     <p class="text-sm text-gray-600 mt-1 mb-2"><strong>Total Net for Range:</strong> <span id="print-range-net">₹0.00</span></p>
@@ -243,8 +355,8 @@
                 <div class="bg-white p-6 rounded-lg shadow-md no-print">
                     <div class="flex justify-between items-center mb-4 border-b pb-2">
                         <h2 class="text-xl font-semibold text-gray-700">Manage Loans & Borrowed Liabilities</h2>
-                        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
-                            🖨️ Print Tax Balance Sheet
+                        <button onclick="printBalanceSheet()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                            🖨️ Print Tax Balance Sheet & ITR Summary
                         </button>
                     </div>
                     <p class="text-sm text-gray-600 mb-4">Add your active business/personal loans or credit lines below. You can record repayments against any specific loan to automatically subtract from its outstanding principal while maintaining a payment history.</p>
@@ -274,27 +386,46 @@
                     </form>
                 </div>
 
-                <div class="print-only">
-                    <h1 class="text-2xl font-bold">STATEMENT OF ASSETS & LIABILITIES (BALANCE SHEET)</h1>
-                    <p class="text-sm text-gray-600 mt-1">Prepared for Tax / ITR / Loan Application Purpose</p>
+                <div class="print-only-balance">
+                    <h1 class="text-2xl font-bold">STATEMENT OF ASSETS, LIABILITIES & ITR SUMMARY</h1>
+                    <p class="text-sm text-gray-600 mt-1">Prepared for Tax / ITR Filing & Loan Application Purpose</p>
                     <p class="text-sm text-gray-600">Statement Date: <span id="bs-print-date"></span></p>
                 </div>
 
                 <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-xl font-semibold text-gray-800">Financial Position Summary</h2>
-                        <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full uppercase">Tax & Loan Ready Format</span>
+                        <h2 class="text-xl font-semibold text-gray-800">Complete Financial Position & ITR Record</h2>
+                        <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full uppercase">ITR Ready Format</span>
+                    </div>
+
+                    <!-- ITR Income & Expense Summary Block -->
+                    <div class="border rounded-lg p-4 bg-indigo-50/50 space-y-3">
+                        <h3 class="font-bold text-indigo-900 border-b border-indigo-200 pb-2 text-lg">ANNUAL / LIFETIME INCOME & EXPENSE RECORD (FOR ITR REFERENCE)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
+                                <span class="text-gray-500 font-medium">Total Recorded Income:</span>
+                                <span id="bs-total-income" class="font-bold text-green-600 text-lg">₹0.00</span>
+                            </div>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
+                                <span class="text-gray-500 font-medium">Total Recorded Expenses:</span>
+                                <span id="bs-total-expense" class="font-bold text-red-600 text-lg">₹0.00</span>
+                            </div>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
+                                <span class="text-gray-500 font-medium">Net Savings / Surplus (Income - Expense):</span>
+                                <span id="bs-net-surplus" class="font-bold text-indigo-700 text-lg">₹0.00</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="border rounded-lg p-4 bg-gray-50 space-y-3">
                             <h3 class="font-bold text-gray-700 border-b pb-2 text-lg">ASSETS (Current & Liquid)</h3>
                             <div class="flex justify-between text-sm py-1">
-                                <span class="text-gray-600">Net Cash & Bank Balance (All-Time Net):</span>
+                                <span class="text-gray-600">Net Cash & Bank Balance (Savings/Surplus):</span>
                                 <span id="bs-asset-cash" class="font-semibold text-green-600">₹0.00</span>
                             </div>
                             <div class="flex justify-between text-sm py-1">
-                                <span class="text-gray-600">Total Recorded Incomes (Lifetime):</span>
+                                <span class="text-gray-600">Total Incomes Considered:</span>
                                 <span id="bs-asset-income" class="font-semibold">₹0.00</span>
                             </div>
                             <div class="border-t pt-2 flex justify-between font-bold text-base text-gray-800">
@@ -406,15 +537,6 @@
         </div>
     </div>
 
-    <!-- Receipt Modal -->
-    <div id="receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 no-print">
-        <div class="bg-white p-4 rounded-lg max-w-lg w-full relative">
-            <button onclick="closeReceiptModal()" class="absolute top-2 right-3 text-gray-600 font-bold text-xl hover:text-gray-900">&times;</button>
-            <h3 class="text-lg font-semibold mb-2">Receipt Attachment</h3>
-            <div id="modal-content-area" class="flex justify-center items-center py-6"></div>
-        </div>
-    </div>
-
     <script>
         // --- Firebase Configuration & Initialization ---
         const firebaseConfig = {
@@ -429,8 +551,13 @@
 
         firebase.initializeApp(firebaseConfig);
         firebase.analytics();
+        const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage();
+
+        // Authenticate anonymously so Firestore write rules pass successfully
+        auth.signInAnonymously().catch((error) => {
+            console.error("Firebase Auth Error:", error);
+        });
 
         const SHARED_DOC_ID = "default_user_data";
 
@@ -489,6 +616,8 @@
 
             if (sectionId === 'reports') {
                 applyFilters();
+            } else if (sectionId === 'category-report') {
+                renderCategoryReport();
             } else if (sectionId === 'history') {
                 applyHistoryFilters();
             } else if (sectionId === 'balance-sheet') {
@@ -500,6 +629,7 @@
             await loadUserDataFromFirebase();
             updateCategoryOptions();
             applyFilters();
+            renderCategoryReport();
             applyHistoryFilters();
             renderBalanceSheet();
         }
@@ -529,20 +659,18 @@
             const amount = parseFloat(document.getElementById('amount').value);
             const date = document.getElementById('date').value;
             const remark = document.getElementById('remark').value.trim();
-            const receiptFile = document.getElementById('receipt').files[0];
+            const fileInput = document.getElementById('receipt-file');
 
             if (!amount || !date) return;
 
-            const transactionId = editId ? Number(editId) : Date.now();
-
-            const processTransaction = async (receiptUrl = null) => {
-                let existingReceipt = null;
-                if (editId) {
+            const processTransaction = async (receiptBase64 = null) => {
+                const transactionId = editId ? Number(editId) : Date.now();
+                
+                let finalReceipt = receiptBase64;
+                if (editId && !receiptBase64) {
                     const existingTx = transactions.find(t => t.id === Number(editId));
-                    if (existingTx) existingReceipt = existingTx.receipt;
+                    if (existingTx) finalReceipt = existingTx.receipt || null;
                 }
-
-                const finalReceipt = receiptUrl || existingReceipt;
 
                 const updatedTransaction = {
                     id: transactionId,
@@ -566,23 +694,18 @@
 
                 await saveAndRefresh();
                 resetTransactionForm();
-                alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded to Cloud!');
+                alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded with receipt!');
                 switchSection('history');
             };
 
-            if (receiptFile) {
-                try {
-                    const storageRef = storage.ref(`receipts/${transactionId}_${receiptFile.name}`);
-                    const snapshot = await storageRef.put(receiptFile);
-                    const downloadUrl = await snapshot.ref.getDownloadURL();
-                    await processTransaction(downloadUrl);
-                } catch (err) {
-                    console.error("Error uploading file to Firebase Storage:", err);
-                    alert("Failed to upload receipt file to cloud storage. Saving transaction with previous/no receipt.");
-                    await processTransaction(null);
-                }
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(uploadEvent) {
+                    await processTransaction(uploadEvent.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
             } else {
-                await processTransaction(null);
+                await processTransaction();
             }
         });
 
@@ -614,6 +737,28 @@
             document.getElementById('form-submit-btn').textContent = 'Save Transaction';
             document.getElementById('form-cancel-btn').classList.add('hidden');
             updateCategoryOptions();
+        }
+
+        // --- PRINT FUNCTIONS ---
+        function printHistory() {
+            document.body.classList.add('printing-history');
+            document.body.classList.remove('printing-category', 'printing-balance');
+            window.print();
+            document.body.classList.remove('printing-history');
+        }
+
+        function printCategoryReport() {
+            document.body.classList.add('printing-category');
+            document.body.classList.remove('printing-history', 'printing-balance');
+            window.print();
+            document.body.classList.remove('printing-category');
+        }
+
+        function printBalanceSheet() {
+            document.body.classList.add('printing-balance');
+            document.body.classList.remove('printing-history', 'printing-category');
+            window.print();
+            document.body.classList.remove('printing-balance');
         }
 
         // --- LOAN MANAGEMENT LOGIC ---
@@ -648,7 +793,7 @@
             const loan = loans.find(l => l.id === id);
             if (!loan) return;
             document.getElementById('pay-loan-id').value = id;
-            document.getElementById('pay-loan-title').textContent = `Repay: ${loan.name} (Balance: ₹${loan.amount.toFixed(2)})`;
+            document.getElementById('pay-loan-title').textContent = `Pay Loan: ${loan.name} (Balance: ₹${loan.amount.toFixed(2)})`;
             document.getElementById('pay-loan-amount').value = '';
             document.getElementById('pay-loan-date').valueAsDate = new Date();
             document.getElementById('pay-loan-modal').classList.remove('hidden');
@@ -752,6 +897,7 @@
         async function saveAndRefresh() {
             await saveDataToFirebase();
             applyFilters();
+            renderCategoryReport();
             applyHistoryFilters();
             renderBalanceSheet();
         }
@@ -779,13 +925,120 @@
             renderCharts(filtered);
         }
 
+        // --- CATEGORY REPORT TAB LOGIC ---
+        function resetCategoryReportFilters() {
+            document.getElementById('cat-rep-start').value = '';
+            document.getElementById('cat-rep-end').value = '';
+            document.getElementById('cat-rep-type').value = 'all';
+            renderCategoryReport();
+        }
+
+        function renderCategoryReport() {
+            const startDate = document.getElementById('cat-rep-start').value;
+            const endDate = document.getElementById('cat-rep-end').value;
+            const recordType = document.getElementById('cat-rep-type').value;
+
+            const startLabel = startDate || 'Beginning';
+            const endLabel = endDate || 'Present';
+            document.getElementById('print-cat-range-label').textContent = `${startLabel} to ${endLabel}`;
+
+            const filtered = transactions.filter(t => {
+                if (startDate && t.date < startDate) return false;
+                if (endDate && t.date > endDate) return false;
+                return true;
+            });
+
+            const incomeContainer = document.getElementById('cat-income-container');
+            const expenseContainer = document.getElementById('cat-expense-container');
+
+            if (recordType === 'income') {
+                incomeContainer.style.display = 'block';
+                expenseContainer.style.display = 'none';
+            } else if (recordType === 'expense') {
+                incomeContainer.style.display = 'none';
+                expenseContainer.style.display = 'block';
+            } else {
+                incomeContainer.style.display = 'block';
+                expenseContainer.style.display = 'block';
+            }
+
+            const incomeMap = {};
+            (categories.income || []).forEach(cat => incomeMap[cat] = 0);
+            let totalIncomeSum = 0;
+
+            const expenseMap = {};
+            (categories.expense || []).forEach(cat => expenseMap[cat] = 0);
+            let totalExpenseSum = 0;
+
+            filtered.forEach(t => {
+                if (t.type === 'income') {
+                    if (incomeMap[t.category] === undefined) incomeMap[t.category] = 0;
+                    incomeMap[t.category] += t.amount;
+                    totalIncomeSum += t.amount;
+                } else if (t.type === 'expense') {
+                    if (expenseMap[t.category] === undefined) expenseMap[t.category] = 0;
+                    expenseMap[t.category] += t.amount;
+                    totalExpenseSum += t.amount;
+                }
+            });
+
+            document.getElementById('cat-total-income-sum').textContent = `₹${totalIncomeSum.toFixed(2)}`;
+            document.getElementById('cat-total-expense-sum').textContent = `₹${totalExpenseSum.toFixed(2)}`;
+
+            const incomeTbody = document.getElementById('cat-income-table-body');
+            incomeTbody.innerHTML = '';
+            const sortedIncomes = Object.entries(incomeMap).sort((a, b) => b[1] - a[1]);
+            if (sortedIncomes.length === 0 || sortedIncomes.every(([k, v]) => v === 0)) {
+                incomeTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-gray-400 italic">No income records found for this range.</td></tr>`;
+            } else {
+                sortedIncomes.forEach(([cat, amt]) => {
+                    incomeTbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-3 font-medium text-gray-700">${cat}</td>
+                            <td class="py-2 px-3 text-right font-semibold text-green-600">₹${amt.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const expenseTbody = document.getElementById('cat-expense-table-body');
+            expenseTbody.innerHTML = '';
+            const sortedExpenses = Object.entries(expenseMap).sort((a, b) => b[1] - a[1]);
+            if (sortedExpenses.length === 0 || sortedExpenses.every(([k, v]) => v === 0)) {
+                expenseTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-gray-400 italic">No expense records found for this range.</td></tr>`;
+            } else {
+                sortedExpenses.forEach(([cat, amt]) => {
+                    expenseTbody.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="py-2 px-3 font-medium text-gray-700">${cat}</td>
+                            <td class="py-2 px-3 text-right font-semibold text-red-600">₹${amt.toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
         function getFilteredHistoryTransactions() {
             const startDate = document.getElementById('hist-filter-start').value;
             const endDate = document.getElementById('hist-filter-end').value;
+            const searchQuery = document.getElementById('hist-search-box').value.toLowerCase().trim();
 
             return transactions.filter(t => {
                 if (startDate && t.date < startDate) return false;
                 if (endDate && t.date > endDate) return false;
+                
+                if (searchQuery) {
+                    const matchCategory = t.category.toLowerCase().includes(searchQuery);
+                    const matchRemark = t.remark.toLowerCase().includes(searchQuery);
+                    const matchAmount = t.amount.toString().includes(searchQuery);
+                    const matchType = t.type.toLowerCase().includes(searchQuery);
+                    const matchMode = (t.paymentMode || 'bank').toLowerCase().includes(searchQuery);
+                    const matchDate = t.date.includes(searchQuery);
+
+                    if (!matchCategory && !matchRemark && !matchAmount && !matchType && !matchMode && !matchDate) {
+                        return false;
+                    }
+                }
                 return true;
             });
         }
@@ -793,6 +1046,7 @@
         function resetHistoryFilters() {
             document.getElementById('hist-filter-start').value = '';
             document.getElementById('hist-filter-end').value = '';
+            document.getElementById('hist-search-box').value = '';
             applyHistoryFilters();
         }
 
@@ -815,9 +1069,6 @@
         }
 
         function updateMetrics(filteredTransactions) {
-            let totalIncome = 0;
-            let totalExpense = 0;
-
             let allIncome = 0, allExpense = 0;
             transactions.forEach(t => {
                 if (t.type === 'income') allIncome += t.amount;
@@ -826,14 +1077,25 @@
             const netAll = allIncome - allExpense;
             document.getElementById('net-balance').textContent = `₹${netAll.toFixed(2)}`;
 
-            filteredTransactions.forEach(t => {
-                if (t.type === 'income') totalIncome += t.amount;
-                else totalExpense += t.amount;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            let monthIncome = 0;
+            let monthExpense = 0;
+
+            transactions.forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth) {
+                    if (t.type === 'income') monthIncome += t.amount;
+                    else monthExpense += t.amount;
+                }
             });
 
-            document.getElementById('dash-total-count').textContent = filteredTransactions.length;
-            document.getElementById('dash-total-income').textContent = `₹${totalIncome.toFixed(2)}`;
-            document.getElementById('dash-total-expense').textContent = `₹${totalExpense.toFixed(2)}`;
+            document.getElementById('dash-month-income').textContent = `₹${monthIncome.toFixed(2)}`;
+            document.getElementById('dash-month-expense').textContent = `₹${monthExpense.toFixed(2)}`;
+            document.getElementById('dash-all-income').textContent = `₹${allIncome.toFixed(2)}`;
+            document.getElementById('dash-all-expense').textContent = `₹${allExpense.toFixed(2)}`;
         }
 
         function renderTransactionsList(filteredTransactions) {
@@ -843,18 +1105,17 @@
             const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">No transactions recorded for this range.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">No transactions recorded for this range/search.</td></tr>`;
                 return;
             }
 
             sorted.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-200 hover:bg-gray-50";
-                
-                let receiptCell = '<span class="text-gray-400 italic">None</span>';
-                if (t.receipt) {
-                    receiptCell = `<a href="${t.receipt}" target="_blank" class="text-indigo-600 underline font-medium hover:text-indigo-800">View File</a>`;
-                }
+
+                const receiptHtml = t.receipt 
+                    ? `<a href="${t.receipt}" target="_blank" class="text-indigo-600 underline font-semibold">View</a>` 
+                    : '-';
 
                 tr.innerHTML = `
                     <td class="py-3 px-3">${t.date}</td>
@@ -865,7 +1126,7 @@
                         ${t.type === 'income' ? '+' : '-'}₹${t.amount.toFixed(2)}
                     </td>
                     <td class="py-3 px-3 text-gray-700 italic">${t.remark || '-'}</td>
-                    <td class="py-3 px-3">${receiptCell}</td>
+                    <td class="py-3 px-3">${receiptHtml}</td>
                     <td class="py-3 px-3 text-center no-print space-x-2">
                         <button onclick="editTransaction(${t.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold">Edit</button>
                         <button onclick="deleteTransaction(${t.id})" class="text-red-500 hover:text-red-700 font-semibold">Delete</button>
@@ -883,6 +1144,10 @@
                 else totalExpense += t.amount;
             });
             const netCash = totalIncome - totalExpense;
+
+            document.getElementById('bs-total-income').textContent = `₹${totalIncome.toFixed(2)}`;
+            document.getElementById('bs-total-expense').textContent = `₹${totalExpense.toFixed(2)}`;
+            document.getElementById('bs-net-surplus').textContent = `₹${netCash.toFixed(2)}`;
 
             document.getElementById('bs-asset-cash').textContent = `₹${netCash.toFixed(2)}`;
             document.getElementById('bs-asset-income').textContent = `₹${totalIncome.toFixed(2)}`;
@@ -924,10 +1189,6 @@
             } else {
                 netWorthEl.className = "text-2xl font-bold text-indigo-900";
             }
-        }
-
-        function closeReceiptModal() {
-            document.getElementById('receipt-modal').classList.add('hidden');
         }
 
         function renderCharts(filteredTransactions) {
