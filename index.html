@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Tracker with ITR & Loan Balance Sheet</title>
+    <title>Financial Tracker with Custom Payment Modes</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -32,122 +32,159 @@
             body.printing-balance .print-only-balance { display: block !important; margin-bottom: 20px; }
 
             table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
-            .shadow-md { box-shadow: none !important; border: none !important; }
+            th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
+            th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
+            .shadow-md, .shadow-xl { box-shadow: none !important; }
         }
         .print-only-history, .print-only-category, .print-only-balance { display: none; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body class="bg-gradient-to-br from-slate-100 via-zinc-100 to-stone-200 min-h-screen text-slate-800 font-sans leading-normal tracking-normal">
 
     <div id="app-content">
-        <header class="bg-indigo-600 text-white shadow-md py-4">
+        <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 text-slate-800 shadow-sm py-4 sticky top-0 z-50">
             <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4">
-                    <h1 class="text-2xl font-bold">💰 Financial & Expense Tracker</h1>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-emerald-900">📊 Pro Accounting & Financial Tracker</h1>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div id="balance-summary" class="text-base font-semibold bg-indigo-700 px-4 py-2 rounded-lg">
-                        Net Balance: <span id="net-balance">₹0.00</span>
+                    <div id="balance-summary" class="text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-2 rounded-xl shadow-inner">
+                        Net Balance: <span id="net-balance" class="text-emerald-700 font-bold">₹0.00</span>
                     </div>
                 </div>
             </div>
         </header>
 
-        <nav class="bg-white shadow-md sticky top-0 z-40 no-print">
+        <nav class="bg-white/80 backdrop-blur border-b border-slate-200 shadow-sm sticky top-[73px] z-40 no-print">
             <div class="container mx-auto px-4 flex overflow-x-auto space-x-2 md:space-x-4 py-3">
-                <button onclick="switchSection('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 font-semibold rounded-lg bg-indigo-600 text-white transition whitespace-nowrap">Dashboard</button>
-                <button onclick="switchSection('add-transaction')" id="nav-add-transaction" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Add Transaction</button>
-                <button onclick="switchSection('categories')" id="nav-categories" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Manage Categories</button>
-                <button onclick="switchSection('reports')" id="nav-reports" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Reports & Charts</button>
-                <button onclick="switchSection('category-report')" id="nav-category-report" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Category Summary</button>
-                <button onclick="switchSection('history')" id="nav-history" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Transaction History</button>
-                <button onclick="switchSection('balance-sheet')" id="nav-balance-sheet" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Loan & Balance Sheet</button>
-                <button onclick="switchSection('backup-restore')" id="nav-backup-restore" class="nav-btn px-4 py-2 font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition whitespace-nowrap">Backup & Restore</button>
+                <button onclick="switchSection('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 font-semibold rounded-xl bg-emerald-700 text-white transition whitespace-nowrap shadow-sm">Dashboard</button>
+                <button onclick="switchSection('add-transaction')" id="nav-add-transaction" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Add Transaction</button>
+                <button onclick="switchSection('categories')" id="nav-categories" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Manage Definitions</button>
+                <button onclick="switchSection('reports')" id="nav-reports" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Reports & Charts</button>
+                <button onclick="switchSection('category-report')" id="nav-category-report" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Category Summary</button>
+                <button onclick="switchSection('history')" id="nav-history" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Transaction History</button>
+                <button onclick="switchSection('balance-sheet')" id="nav-balance-sheet" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Loan & Balance Sheet</button>
+                <button onclick="switchSection('backup-restore')" id="nav-backup-restore" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Backup & Restore</button>
             </div>
         </nav>
 
         <main class="container mx-auto px-4 py-6 max-w-6xl">
 
+            <!-- DASHBOARD SECTION -->
             <section id="sec-dashboard" class="section-panel space-y-6">
-                <!-- Upper Section: Current Month Income and Expense -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Current Month Financial Overview</h2>
-                    <p class="text-gray-600 mb-4">Track incomes and expenses for the current calendar month.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                            <p class="text-sm font-medium text-green-600">Current Month Income</p>
-                            <p id="dash-month-income" class="text-2xl font-bold text-green-900">₹0.00</p>
+                
+                <!-- Dynamic Payment Modes Liquidity Breakdown -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                        <h2 class="text-xl font-bold text-slate-900">🏦 Payment Modes Liquidity & Ledger Balances</h2>
+                        <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium">Real-time Accounting Ledger</span>
+                    </div>
+                    <div id="dash-payment-modes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                        <!-- Dynamically populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Monthly Detailed Payment Mode Income/Expense Breakdown -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                        <h2 class="text-xl font-bold text-slate-900">📅 Current Calendar Month Payment Metrics</h2>
+                        <span id="current-month-label" class="text-xs bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1 rounded-full font-medium">This Month</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <!-- Month Income Split -->
+                        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
+                            <h3 class="font-bold text-emerald-700 text-sm tracking-wide uppercase">Monthly Incomes by Payment Mode</h3>
+                            <div id="dash-month-income-modes" class="space-y-2"></div>
+                            <div class="pt-2 flex justify-between items-center text-base font-bold border-t border-slate-200">
+                                <span>Total Month Income:</span>
+                                <span id="dash-month-total-inc" class="text-emerald-700 text-lg">₹0.00</span>
+                            </div>
                         </div>
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                            <p class="text-sm font-medium text-red-600">Current Month Expense</p>
-                            <p id="dash-month-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
+
+                        <!-- Month Expense Split -->
+                        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
+                            <h3 class="font-bold text-rose-700 text-sm tracking-wide uppercase">Monthly Expenses by Payment Mode</h3>
+                            <div id="dash-month-expense-modes" class="space-y-2"></div>
+                            <div class="pt-2 flex justify-between items-center text-base font-bold border-t border-slate-200">
+                                <span>Total Month Expense:</span>
+                                <span id="dash-month-total-exp" class="text-rose-700 text-lg">₹0.00</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Lower Section: All Time Income and Expenses -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">All Time Financial Overview</h2>
-                    <p class="text-gray-600 mb-4">Track lifetime incomes and expenses.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                            <p class="text-sm font-medium text-green-600">All Time Total Income</p>
-                            <p id="dash-all-income" class="text-2xl font-bold text-green-900">₹0.00</p>
+                <!-- All-Time Detailed Payment Mode Income/Expense Breakdown -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                        <h2 class="text-xl font-bold text-slate-900">📈 All-Time Cumulative Payment Metrics</h2>
+                        <span class="text-xs bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1 rounded-full font-medium">Lifetime History</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <!-- All Time Income Split -->
+                        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
+                            <h3 class="font-bold text-emerald-700 text-sm tracking-wide uppercase">Lifetime Incomes by Payment Mode</h3>
+                            <div id="dash-all-income-modes" class="space-y-2"></div>
+                            <div class="pt-2 flex justify-between items-center text-base font-bold border-t border-slate-200">
+                                <span>All-Time Total Income:</span>
+                                <span id="dash-all-total-inc" class="text-emerald-700 text-lg">₹0.00</span>
+                            </div>
                         </div>
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                            <p class="text-sm font-medium text-red-600">All Time Total Expense</p>
-                            <p id="dash-all-expense" class="text-2xl font-bold text-red-900">₹0.00</p>
+
+                        <!-- All Time Expense Split -->
+                        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
+                            <h3 class="font-bold text-rose-700 text-sm tracking-wide uppercase">Lifetime Expenses by Payment Mode</h3>
+                            <div id="dash-all-expense-modes" class="space-y-2"></div>
+                            <div class="pt-2 flex justify-between items-center text-base font-bold border-t border-slate-200">
+                                <span>All-Time Total Expense:</span>
+                                <span id="dash-all-total-exp" class="text-rose-700 text-lg">₹0.00</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- ADD TRANSACTION SECTION -->
             <section id="sec-add-transaction" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto">
-                    <h2 id="form-title" class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Record New Transaction</h2>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-xl mx-auto backdrop-blur-md">
+                    <h2 id="form-title" class="text-xl font-semibold mb-4 text-slate-900 border-b border-slate-100 pb-2">Record New Transaction</h2>
                     <form id="transaction-form" class="space-y-4">
                         <input type="hidden" id="edit-transaction-id">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Type</label>
-                            <select id="type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="updateCategoryOptions()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                            <select id="type" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="updateCategoryOptions()">
                                 <option value="income">Income</option>
                                 <option value="expense">Expense</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Category</label>
-                            <select id="category" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required></select>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                            <select id="category" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required></select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Payment Mode</label>
-                            <select id="payment-mode" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500">
-                                <option value="Bank">Bank</option>
-                                <option value="Cash">Cash</option>
-                            </select>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Payment Mode</label>
+                            <select id="payment-mode" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required></select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Amount (₹)</label>
-                            <input type="number" id="amount" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
+                            <input type="number" id="amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="0.00" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Date</label>
-                            <input type="date" id="date" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                            <input type="date" id="date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Remark / Description</label>
-                            <input type="text" id="remark" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Client meeting lunch, monthly payout">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Remark / Description</label>
+                            <input type="text" id="remark" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., Client meeting lunch, monthly payout">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Upload Receipt (Gallery / Camera)</label>
-                            <input type="file" id="receipt-file" accept="image/*" capture="environment" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Upload Receipt (Gallery / Camera)</label>
+                            <input type="file" id="receipt-file" accept="image/*" capture="environment" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" id="form-submit-btn" class="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" id="form-submit-btn" class="flex-1 bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
                                 Save Transaction
                             </button>
-                            <button type="button" id="form-cancel-btn" onclick="resetTransactionForm()" class="hidden bg-gray-400 text-white font-semibold px-4 py-2 rounded-lg hover:bg-gray-500 transition">
+                            <button type="button" id="form-cancel-btn" onclick="resetTransactionForm()" class="hidden bg-slate-500 text-white font-semibold px-4 py-2.5 rounded-xl hover:bg-slate-600 transition">
                                 Cancel
                             </button>
                         </div>
@@ -155,52 +192,100 @@
                 </div>
             </section>
 
+            <!-- CATEGORIES & PAYMENT MODES SECTION -->
             <section id="sec-categories" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Define Custom Categories</h2>
-                    <form id="category-form" class="space-y-4">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-2xl mx-auto space-y-6 backdrop-blur-md">
+                    <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Manage Custom Categories</h2>
+                    <form id="category-form" class="space-y-4 border-b border-slate-100 pb-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Category Type</label>
-                            <select id="new-cat-type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category Type</label>
+                            <select id="new-cat-type" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600">
                                 <option value="income">Income</option>
                                 <option value="expense">Expense</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Category Name</label>
-                            <input type="text" id="new-cat-name" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Freelance, Groceries, Rent" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Category Name</label>
+                            <input type="text" id="new-cat-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., Freelance, Groceries, Rent" required>
                         </div>
-                        <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition">
+                        <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
                             Add Category Definition
                         </button>
                     </form>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        <div>
+                            <h3 class="font-bold text-emerald-700 mb-3 text-sm tracking-wide uppercase">Income Categories</h3>
+                            <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
+                                <table class="w-full text-left text-sm">
+                                    <tbody id="category-income-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-rose-700 mb-3 text-sm tracking-wide uppercase">Expense Categories</h3>
+                            <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
+                                <table class="w-full text-left text-sm">
+                                    <tbody id="category-expense-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Modes Manager Card -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-2xl mx-auto space-y-6 backdrop-blur-md">
+                    <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Manage Payment Modes (Cash, Bank, UPI, etc.)</h2>
+                    <form id="payment-mode-form" class="space-y-4 border-b border-slate-100 pb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Payment Mode Name</label>
+                            <input type="text" id="new-pm-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., Paytm Wallet, HDFC Credit Card" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Opening Balance (₹)</label>
+                            <input type="number" id="new-pm-opening" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="0.00" value="0">
+                        </div>
+                        <button type="submit" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">
+                            Add Payment Mode
+                        </button>
+                    </form>
+
+                    <div>
+                        <h3 class="font-bold text-teal-700 mb-3 text-sm tracking-wide uppercase">Active Payment Modes</h3>
+                        <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
+                            <table class="w-full text-left text-sm">
+                                <tbody id="payment-modes-list"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
 
+            <!-- REPORTS SECTION -->
             <section id="sec-reports" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md no-print">
-                    <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 class="text-xl font-semibold text-gray-700">Date Range Filter for Reports</h2>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                        <h2 class="text-xl font-semibold text-slate-900">Date Range Filter for Reports</h2>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-                            <input type="date" id="filter-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyFilters()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                            <input type="date" id="filter-start" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="applyFilters()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-                            <input type="date" id="filter-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyFilters()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                            <input type="date" id="filter-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="applyFilters()">
                         </div>
                         <div>
-                            <button onclick="resetFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                            <button onclick="resetFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
                                 Reset Dates
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Visual Pie Charts</h2>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-900 border-b border-slate-100 pb-2">Visual Pie Charts</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                         <div class="relative h-64 flex justify-center items-center">
                             <canvas id="incomePieChart"></canvas>
@@ -212,129 +297,127 @@
                 </div>
             </section>
 
-            <!-- New Category Summary Tab Section -->
+            <!-- CATEGORY SUMMARY SECTION -->
             <section id="sec-category-report" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md no-print">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-2 gap-4">
-                        <h2 class="text-xl font-semibold text-gray-700">Category-Wise Records & Totals</h2>
-                        <button onclick="printCategoryReport()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b border-slate-100 pb-2 gap-4">
+                        <h2 class="text-xl font-semibold text-slate-900">Category-Wise Records & Totals</h2>
+                        <button onclick="printCategoryReport()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
                             🖨️ Print Category Report
                         </button>
                     </div>
-                    <p class="text-sm text-gray-600 mb-4">View your total income and expenses grouped by category between specific dates or for all time.</p>
+                    <p class="text-sm text-slate-600 mb-4">View your total income and expenses grouped by category between specific dates or for all time.</p>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date (Optional)</label>
-                            <input type="date" id="cat-rep-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date (Optional)</label>
+                            <input type="date" id="cat-rep-start" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="renderCategoryReport()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date (Optional)</label>
-                            <input type="date" id="cat-rep-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">End Date (Optional)</label>
+                            <input type="date" id="cat-rep-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="renderCategoryReport()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Record Type</label>
-                            <select id="cat-rep-type" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="renderCategoryReport()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Record Type</label>
+                            <select id="cat-rep-type" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="renderCategoryReport()">
                                 <option value="all">All (Income & Expense)</option>
                                 <option value="income">Income Only</option>
                                 <option value="expense">Expense Only</option>
                             </select>
                         </div>
                         <div>
-                            <button onclick="resetCategoryReportFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                            <button onclick="resetCategoryReportFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
                                 Reset Filters
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="print-only-category">
+                <div class="print-only-category text-slate-900">
                     <h1 class="text-2xl font-bold">Category-Wise Financial Statement</h1>
-                    <p class="text-sm text-gray-600">Date Range: <span id="print-cat-range-label">All Time</span></p>
+                    <p class="text-sm text-slate-600">Date Range: <span id="print-cat-range-label">All Time</span></p>
                 </div>
 
-                <!-- Summary Tables by Category -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Income Category Breakdown -->
-                    <div id="cat-income-container" class="bg-white p-6 rounded-lg shadow-md space-y-4">
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <h3 class="text-lg font-bold text-green-700">Income by Category</h3>
-                            <span id="cat-total-income-sum" class="font-bold text-green-700">₹0.00</span>
+                    <div id="cat-income-container" class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4 backdrop-blur-md">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <h3 class="text-lg font-bold text-emerald-700">Income by Category</h3>
+                            <span id="cat-total-income-sum" class="font-bold text-emerald-700">₹0.00</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
                                 <thead>
-                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                    <tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
                                         <th class="py-2 px-3">Category</th>
                                         <th class="py-2 px-3 text-right">Total Amount (₹)</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cat-income-table-body"></tbody>
+                                <tbody id="cat-income-table-body" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- Expense Category Breakdown -->
-                    <div id="cat-expense-container" class="bg-white p-6 rounded-lg shadow-md space-y-4">
-                        <div class="flex justify-between items-center border-b pb-2">
-                            <h3 class="text-lg font-bold text-red-700">Expenses by Category</h3>
-                            <span id="cat-total-expense-sum" class="font-bold text-red-700">₹0.00</span>
+                    <div id="cat-expense-container" class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4 backdrop-blur-md">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <h3 class="text-lg font-bold text-rose-700">Expenses by Category</h3>
+                            <span id="cat-total-expense-sum" class="font-bold text-rose-700">₹0.00</span>
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
                                 <thead>
-                                    <tr class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                    <tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
                                         <th class="py-2 px-3">Category</th>
                                         <th class="py-2 px-3 text-right">Total Amount (₹)</th>
                                     </tr>
                                 </thead>
-                                <tbody id="cat-expense-table-body"></tbody>
+                                <tbody id="cat-expense-table-body" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- HISTORY SECTION -->
             <section id="sec-history" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md no-print">
-                    <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 class="text-xl font-semibold text-gray-700">History Filter, Search & Print</h2>
-                        <button onclick="printHistory()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                        <h2 class="text-xl font-semibold text-slate-900">History Filter, Search & Print</h2>
+                        <button onclick="printHistory()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
                             🖨️ Print Filtered History
                         </button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
-                            <input type="date" id="hist-filter-start" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                            <input type="date" id="hist-filter-start" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="applyHistoryFilters()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">End Date</label>
-                            <input type="date" id="hist-filter-end" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" onchange="applyHistoryFilters()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                            <input type="date" id="hist-filter-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="applyHistoryFilters()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Search Keyword</label>
-                            <input type="text" id="hist-search-box" placeholder="Search category, remark, amount..." class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" oninput="applyHistoryFilters()">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Search Keyword</label>
+                            <input type="text" id="hist-search-box" placeholder="Search category, remark, amount..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" oninput="applyHistoryFilters()">
                         </div>
                         <div>
-                            <button onclick="resetHistoryFilters()" class="w-full bg-gray-500 text-white font-semibold py-2 rounded-lg hover:bg-gray-600 transition">
+                            <button onclick="resetHistoryFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
                                 Reset Filters
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div class="print-only-history">
+                <div class="print-only-history text-slate-900">
                     <h1 class="text-2xl font-bold">Transaction History Statement</h1>
-                    <p class="text-sm text-gray-600">Filtered Date Range: <span id="print-range-label">All Time</span></p>
-                    <p class="text-sm text-gray-600 mt-1 mb-2"><strong>Total Net for Range:</strong> <span id="print-range-net">₹0.00</span></p>
+                    <p class="text-sm text-slate-600">Filtered Date Range: <span id="print-range-label">All Time</span></p>
+                    <p class="text-sm text-slate-600 mt-1 mb-2"><strong>Total Net for Range:</strong> <span id="print-range-net">₹0.00</span></p>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2 no-print">Transaction List Records</h2>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <h2 class="text-xl font-semibold mb-4 text-slate-900 border-b border-slate-100 pb-2 no-print">Transaction List Records</h2>
                     <div class="overflow-x-auto max-h-96">
                         <table class="w-full text-left border-collapse">
                             <thead>
-                                <tr class="bg-gray-100 text-gray-600 uppercase text-xs leading-normal">
+                                <tr class="bg-slate-50 text-slate-600 uppercase text-xs leading-normal border-b border-slate-200">
                                     <th class="py-3 px-3">Date</th>
                                     <th class="py-3 px-3">Type</th>
                                     <th class="py-3 px-3">Category</th>
@@ -345,148 +428,149 @@
                                     <th class="py-3 px-3 text-center no-print">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="transaction-table-body" class="text-gray-600 text-sm font-light"></tbody>
+                            <tbody id="transaction-table-body" class="text-slate-700 text-sm font-light divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
+            <!-- BALANCE SHEET SECTION -->
             <section id="sec-balance-sheet" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md no-print">
-                    <div class="flex justify-between items-center mb-4 border-b pb-2">
-                        <h2 class="text-xl font-semibold text-gray-700">Manage Loans & Borrowed Liabilities</h2>
-                        <button onclick="printBalanceSheet()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                        <h2 class="text-xl font-semibold text-slate-900">Manage Loans & Borrowed Liabilities</h2>
+                        <button onclick="printBalanceSheet()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
                             🖨️ Print Tax Balance Sheet & ITR Summary
                         </button>
                     </div>
-                    <p class="text-sm text-gray-600 mb-4">Add your active business/personal loans or credit lines below. You can record repayments against any specific loan to automatically subtract from its outstanding principal while maintaining a payment history.</p>
+                    <p class="text-sm text-slate-600 mb-4">Add your active business/personal loans or credit lines below. Record repayments against any specific loan to subtract from its principal.</p>
                     
                     <form id="loan-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Date Taken</label>
-                            <input type="date" id="loan-date" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Date Taken</label>
+                            <input type="date" id="loan-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Loan / Lender Name</label>
-                            <input type="text" id="loan-name" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., HDFC Car Loan" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Loan / Lender Name</label>
+                            <input type="text" id="loan-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., HDFC Car Loan" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Principal Amount (₹)</label>
-                            <input type="number" id="loan-amount" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="0.00" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Principal Amount (₹)</label>
+                            <input type="number" id="loan-amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="0.00" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Interest Rate (% p.a.)</label>
-                            <input type="number" id="loan-rate" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" placeholder="e.g., 8.5">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Interest Rate (% p.a.)</label>
+                            <input type="number" id="loan-rate" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., 8.5">
                         </div>
                         <div>
-                            <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                            <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
                                 Add Loan Liability
                             </button>
                         </div>
                     </form>
                 </div>
 
-                <div class="print-only-balance">
+                <div class="print-only-balance text-slate-900">
                     <h1 class="text-2xl font-bold">STATEMENT OF ASSETS, LIABILITIES & ITR SUMMARY</h1>
-                    <p class="text-sm text-gray-600 mt-1">Prepared for Tax / ITR Filing & Loan Application Purpose</p>
-                    <p class="text-sm text-gray-600">Statement Date: <span id="bs-print-date"></span></p>
+                    <p class="text-sm text-slate-600 mt-1">Prepared for Tax / ITR Filing & Loan Application Purpose</p>
+                    <p class="text-sm text-slate-600">Statement Date: <span id="bs-print-date"></span></p>
                 </div>
 
-                <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
-                    <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-xl font-semibold text-gray-800">Complete Financial Position & ITR Record</h2>
-                        <span class="text-xs bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full uppercase">ITR Ready Format</span>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6 backdrop-blur-md">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                        <h2 class="text-xl font-semibold text-slate-900">Complete Financial Position & ITR Record</h2>
+                        <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-3 py-1 rounded-full uppercase">ITR Ready Format</span>
                     </div>
 
-                    <!-- ITR Income & Expense Summary Block -->
-                    <div class="border rounded-lg p-4 bg-indigo-50/50 space-y-3">
-                        <h3 class="font-bold text-indigo-900 border-b border-indigo-200 pb-2 text-lg">ANNUAL / LIFETIME INCOME & EXPENSE RECORD (FOR ITR REFERENCE)</h3>
+                    <div class="border border-emerald-200 rounded-xl p-4 bg-emerald-50/50 space-y-3">
+                        <h3 class="font-bold text-emerald-900 border-b border-emerald-200 pb-2 text-base">ANNUAL / LIFETIME INCOME & EXPENSE RECORD (FOR ITR REFERENCE)</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
-                                <span class="text-gray-500 font-medium">Total Recorded Income:</span>
-                                <span id="bs-total-income" class="font-bold text-green-600 text-lg">₹0.00</span>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
+                                <span class="text-slate-500 font-medium">Total Recorded Income:</span>
+                                <span id="bs-total-income" class="font-bold text-emerald-700 text-lg">₹0.00</span>
                             </div>
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
-                                <span class="text-gray-500 font-medium">Total Recorded Expenses:</span>
-                                <span id="bs-total-expense" class="font-bold text-red-600 text-lg">₹0.00</span>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
+                                <span class="text-slate-500 font-medium">Total Recorded Expenses:</span>
+                                <span id="bs-total-expense" class="font-bold text-rose-700 text-lg">₹0.00</span>
                             </div>
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded border border-indigo-100">
-                                <span class="text-gray-500 font-medium">Net Savings / Surplus (Income - Expense):</span>
-                                <span id="bs-net-surplus" class="font-bold text-indigo-700 text-lg">₹0.00</span>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
+                                <span class="text-slate-500 font-medium">Net Savings / Surplus:</span>
+                                <span id="bs-net-surplus" class="font-bold text-slate-800 text-lg">₹0.00</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="border rounded-lg p-4 bg-gray-50 space-y-3">
-                            <h3 class="font-bold text-gray-700 border-b pb-2 text-lg">ASSETS (Current & Liquid)</h3>
+                        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">ASSETS (Current & Liquid)</h3>
                             <div class="flex justify-between text-sm py-1">
-                                <span class="text-gray-600">Net Cash & Bank Balance (Savings/Surplus):</span>
-                                <span id="bs-asset-cash" class="font-semibold text-green-600">₹0.00</span>
+                                <span class="text-slate-600">Net Liquidity Balance:</span>
+                                <span id="bs-asset-cash" class="font-semibold text-emerald-700">₹0.00</span>
                             </div>
                             <div class="flex justify-between text-sm py-1">
-                                <span class="text-gray-600">Total Incomes Considered:</span>
-                                <span id="bs-asset-income" class="font-semibold">₹0.00</span>
+                                <span class="text-slate-600">Total Incomes Considered:</span>
+                                <span id="bs-asset-income" class="font-semibold text-slate-800">₹0.00</span>
                             </div>
-                            <div class="border-t pt-2 flex justify-between font-bold text-base text-gray-800">
+                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-slate-900">
                                 <span>Total Assets:</span>
                                 <span id="bs-total-assets">₹0.00</span>
                             </div>
                         </div>
 
-                        <div class="border rounded-lg p-4 bg-gray-50 space-y-3">
-                            <h3 class="font-bold text-gray-700 border-b pb-2 text-lg">LIABILITIES (Loans & Debt)</h3>
+                        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">LIABILITIES (Loans & Debt)</h3>
                             <div class="overflow-x-auto max-h-48">
                                 <table class="w-full text-left text-xs">
                                     <thead>
-                                        <tr class="text-gray-500 border-b">
-                                            <th class="py-1">Date Taken</th>
+                                        <tr class="text-slate-500 border-b border-slate-200">
+                                            <th class="py-1">Date</th>
                                             <th class="py-1">Lender / Facility</th>
                                             <th class="py-1">Rate</th>
                                             <th class="py-1">Outstanding (₹)</th>
                                             <th class="py-1 text-center no-print">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="loan-table-body"></tbody>
+                                    <tbody id="loan-table-body" class="divide-y divide-slate-200"></tbody>
                                 </table>
                             </div>
-                            <div class="border-t pt-2 flex justify-between font-bold text-base text-red-600">
+                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-rose-700">
                                 <span>Total Liabilities:</span>
                                 <span id="bs-total-liabilities">₹0.00</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="bg-emerald-900 text-white rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
                         <div>
-                            <h4 class="font-bold text-indigo-900 text-lg">Net Worth / Capital Account (Assets minus Liabilities)</h4>
-                            <p class="text-xs text-indigo-700">This valuation represents your total declared financial standing for bank verification & ITR wealth schedules.</p>
+                            <h4 class="font-bold text-emerald-100 text-lg">Net Worth / Capital Account (Assets minus Liabilities)</h4>
+                            <p class="text-xs text-emerald-200/80">Valuation represents total declared financial standing for bank verification & ITR wealth schedules.</p>
                         </div>
-                        <div id="bs-net-worth" class="text-2xl font-bold text-indigo-900">
+                        <div id="bs-net-worth" class="text-2xl font-extrabold text-emerald-300">
                             ₹0.00
                         </div>
                     </div>
                 </div>
             </section>
 
+            <!-- BACKUP & RESTORE SECTION -->
             <section id="sec-backup-restore" class="section-panel hidden space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md max-w-xl mx-auto space-y-6">
-                    <h2 class="text-xl font-semibold text-gray-700 border-b pb-2">Data Backup & Restore</h2>
-                    <p class="text-sm text-gray-600">Export your complete financial records, categories, and loan data into a secure backup file, or restore them from a previous save.</p>
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-xl mx-auto space-y-6 backdrop-blur-md">
+                    <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Data Backup & Restore</h2>
+                    <p class="text-sm text-slate-600">Export your complete financial records, categories, payment modes, and loan data into a secure backup file, or restore them from a previous save.</p>
                     
-                    <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
-                        <h3 class="font-bold text-gray-700">Backup Data</h3>
-                        <p class="text-xs text-gray-600">Download a JSON file containing all your transactional records and settings.</p>
-                        <button onclick="exportDataBackup()" class="w-full bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 transition">
+                    <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
+                        <h3 class="font-bold text-slate-800">Backup Data</h3>
+                        <p class="text-xs text-slate-600">Download a JSON file containing all your transactional records and settings.</p>
+                        <button onclick="exportDataBackup()" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
                             Download Backup File 📥
                         </button>
                     </div>
 
-                    <div class="border p-4 rounded-lg bg-gray-50 space-y-3">
-                        <h3 class="font-bold text-gray-700">Restore Data</h3>
-                        <p class="text-xs text-gray-600">Select a previously exported JSON backup file to restore your data. <span class="text-red-600 font-semibold">Warning: This will overwrite current cloud records.</span></p>
-                        <input type="file" id="restore-file-input" accept=".json" class="w-full border rounded-lg p-2 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                        <button onclick="importDataRestore()" class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition">
+                    <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
+                        <h3 class="font-bold text-slate-800">Restore Data</h3>
+                        <p class="text-xs text-slate-600">Select a previously exported JSON backup file to restore your data. <span class="text-rose-700 font-semibold">Warning: This will overwrite current cloud records.</span></p>
+                        <input type="file" id="restore-file-input" accept=".json" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
+                        <button onclick="importDataRestore()" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">
                             Upload & Restore Data 📤
                         </button>
                     </div>
@@ -496,22 +580,63 @@
         </main>
     </div>
 
+    <!-- Edit Category Modal -->
+    <div id="edit-category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
+            <button onclick="closeEditCategoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <h3 class="text-lg font-semibold mb-4 text-slate-900">Edit Category Name</h3>
+            <form id="edit-category-form" class="space-y-4">
+                <input type="hidden" id="edit-cat-type-val">
+                <input type="hidden" id="edit-cat-old-name">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">New Category Name</label>
+                    <input type="text" id="edit-cat-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
+                </div>
+                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
+                    Update Category Name
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Payment Mode Modal -->
+    <div id="edit-pm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
+            <button onclick="closeEditPaymentModeModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <h3 class="text-lg font-semibold mb-4 text-slate-900">Edit Payment Mode</h3>
+            <form id="edit-pm-form" class="space-y-4">
+                <input type="hidden" id="edit-pm-old-name">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">New Payment Mode Name</label>
+                    <input type="text" id="edit-pm-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Opening Balance (₹)</label>
+                    <input type="number" id="edit-pm-opening" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
+                </div>
+                <button type="submit" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">
+                    Update Payment Mode
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Payment Modal -->
-    <div id="pay-loan-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 no-print">
-        <div class="bg-white p-6 rounded-lg max-w-sm w-full relative">
-            <button onclick="closePayLoanModal()" class="absolute top-2 right-3 text-gray-600 font-bold text-xl hover:text-gray-900">&times;</button>
-            <h3 class="text-lg font-semibold mb-4 text-gray-800" id="pay-loan-title">Pay Loan</h3>
+    <div id="pay-loan-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
+            <button onclick="closePayLoanModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <h3 class="text-lg font-semibold mb-4 text-slate-900" id="pay-loan-title">Pay Loan</h3>
             <form id="pay-loan-form" class="space-y-4">
                 <input type="hidden" id="pay-loan-id">
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Repayment Amount (₹)</label>
-                    <input type="number" id="pay-loan-amount" step="0.01" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Repayment Amount (₹)</label>
+                    <input type="number" id="pay-loan-amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-600 mb-1">Date of Payment</label>
-                    <input type="date" id="pay-loan-date" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500" required>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Payment</label>
+                    <input type="date" id="pay-loan-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
                 </div>
-                <button type="submit" class="w-full bg-green-600 text-white font-semibold py-2 rounded-lg hover:bg-green-700 transition">
+                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
                     Submit Repayment
                 </button>
             </form>
@@ -519,19 +644,19 @@
     </div>
 
     <!-- Loan History Modal -->
-    <div id="loan-history-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50 no-print">
-        <div class="bg-white p-6 rounded-lg max-w-md w-full relative">
-            <button onclick="closeLoanHistoryModal()" class="absolute top-2 right-3 text-gray-600 font-bold text-xl hover:text-gray-900">&times;</button>
-            <h3 class="text-lg font-semibold mb-4 text-gray-800" id="loan-history-title">Repayment History</h3>
-            <div class="overflow-y-auto max-h-64 border rounded-lg">
+    <div id="loan-history-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full relative shadow-xl">
+            <button onclick="closeLoanHistoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <h3 class="text-lg font-semibold mb-4 text-slate-900" id="loan-history-title">Repayment History</h3>
+            <div class="overflow-y-auto max-h-64 border border-slate-200 rounded-xl bg-slate-50">
                 <table class="w-full text-left text-sm">
                     <thead>
-                        <tr class="border-b bg-gray-100 text-gray-700">
-                            <th class="py-2 px-3">Payment Date</th>
-                            <th class="py-2 px-3">Amount Paid (₹)</th>
+                        <tr class="border-b border-slate-200 bg-white text-slate-600">
+                            <th class="py-2.5 px-3">Payment Date</th>
+                            <th class="py-2.5 px-3">Amount Paid (₹)</th>
                         </tr>
                     </thead>
-                    <tbody id="loan-history-body"></tbody>
+                    <tbody id="loan-history-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
                 </table>
             </div>
         </div>
@@ -565,6 +690,11 @@
             income: ['Salary', 'Investments', 'Gifts'],
             expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport']
         };
+        // Can be array of strings (legacy) or objects: { name: string, openingBalance: number }
+        let paymentModes = [
+            { name: 'Cash', openingBalance: 0 },
+            { name: 'Bank', openingBalance: 0 }
+        ];
         let transactions = [];
         let loans = [];
         let incomePieChartInstance = null;
@@ -575,12 +705,23 @@
         document.getElementById('loan-date').valueAsDate = new Date();
         document.getElementById('bs-print-date').textContent = new Date().toLocaleDateString();
 
+        function normalizePaymentModes(rawModes) {
+            if (!rawModes || !Array.isArray(rawModes)) return [{ name: 'Cash', openingBalance: 0 }, { name: 'Bank', openingBalance: 0 }];
+            return rawModes.map(pm => {
+                if (typeof pm === 'string') {
+                    return { name: pm, openingBalance: 0 };
+                }
+                return { name: pm.name || 'Unnamed', openingBalance: Number(pm.openingBalance) || 0 };
+            });
+        }
+
         async function loadUserDataFromFirebase() {
             try {
                 const doc = await db.collection('app_data').doc(SHARED_DOC_ID).get();
                 if (doc.exists) {
                     const data = doc.data();
                     categories = data.categories || categories;
+                    paymentModes = normalizePaymentModes(data.paymentModes);
                     transactions = data.transactions || [];
                     loans = data.loans || [];
                 }
@@ -593,6 +734,7 @@
             try {
                 await db.collection('app_data').doc(SHARED_DOC_ID).set({
                     categories: categories,
+                    paymentModes: paymentModes,
                     transactions: transactions,
                     loans: loans
                 }, { merge: true });
@@ -605,14 +747,14 @@
         function switchSection(sectionId) {
             document.querySelectorAll('.section-panel').forEach(panel => panel.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-indigo-600', 'text-white');
-                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+                btn.classList.remove('bg-emerald-700', 'text-white', 'shadow-sm');
+                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
             });
 
             document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${sectionId}`);
-            activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
-            activeBtn.classList.add('bg-indigo-600', 'text-white');
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            activeBtn.classList.add('bg-emerald-700', 'text-white', 'shadow-sm');
 
             if (sectionId === 'reports') {
                 applyFilters();
@@ -622,16 +764,24 @@
                 applyHistoryFilters();
             } else if (sectionId === 'balance-sheet') {
                 renderBalanceSheet();
+            } else if (sectionId === 'categories') {
+                renderCategoriesManager();
+                renderPaymentModesManager();
+            } else if (sectionId === 'dashboard') {
+                applyFilters();
             }
         }
 
         async function initApp() {
             await loadUserDataFromFirebase();
             updateCategoryOptions();
+            updatePaymentModeOptions();
             applyFilters();
             renderCategoryReport();
             applyHistoryFilters();
             renderBalanceSheet();
+            renderCategoriesManager();
+            renderPaymentModesManager();
         }
 
         function updateCategoryOptions() {
@@ -647,6 +797,18 @@
                     categorySelect.appendChild(option);
                 });
             }
+        }
+
+        function updatePaymentModeOptions() {
+            const pmSelect = document.getElementById('payment-mode');
+            pmSelect.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const option = document.createElement('option');
+                option.value = pm.name;
+                option.textContent = pm.name;
+                pmSelect.appendChild(option);
+            });
         }
 
         document.getElementById('transaction-form').addEventListener('submit', async function(e) {
@@ -717,7 +879,8 @@
             document.getElementById('type').value = tx.type;
             updateCategoryOptions();
             document.getElementById('category').value = tx.category;
-            document.getElementById('payment-mode').value = tx.paymentMode || 'Bank';
+            updatePaymentModeOptions();
+            document.getElementById('payment-mode').value = tx.paymentMode || paymentModes[0].name;
             document.getElementById('amount').value = tx.amount;
             document.getElementById('date').value = tx.date;
             document.getElementById('remark').value = tx.remark === '-' ? '' : tx.remark;
@@ -737,9 +900,205 @@
             document.getElementById('form-submit-btn').textContent = 'Save Transaction';
             document.getElementById('form-cancel-btn').classList.add('hidden');
             updateCategoryOptions();
+            updatePaymentModeOptions();
         }
 
-        // --- PRINT FUNCTIONS ---
+        function renderCategoriesManager() {
+            const incomeList = document.getElementById('category-income-list');
+            const expenseList = document.getElementById('category-expense-list');
+
+            incomeList.innerHTML = '';
+            expenseList.innerHTML = '';
+
+            (categories.income || []).forEach(cat => {
+                incomeList.innerHTML += `
+                    <tr class="border-b border-slate-200 hover:bg-slate-100">
+                        <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
+                        <td class="py-2.5 px-3 text-right space-x-2">
+                            <button onclick="openEditCategoryModal('income', '${cat}')" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
+                            <button onclick="deleteCategory('income', '${cat}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            (categories.expense || []).forEach(cat => {
+                expenseList.innerHTML += `
+                    <tr class="border-b border-slate-200 hover:bg-slate-100">
+                        <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
+                        <td class="py-2.5 px-3 text-right space-x-2">
+                            <button onclick="openEditCategoryModal('expense', '${cat}')" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
+                            <button onclick="deleteCategory('expense', '${cat}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderPaymentModesManager() {
+            const pmList = document.getElementById('payment-modes-list');
+            pmList.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                pmList.innerHTML += `
+                    <tr class="border-b border-slate-200 hover:bg-slate-100">
+                        <td class="py-2.5 px-3 font-medium text-slate-800">${pm.name}</td>
+                        <td class="py-2.5 px-3 text-slate-600 text-xs">Opening: ₹${(pm.openingBalance || 0).toFixed(2)}</td>
+                        <td class="py-2.5 px-3 text-right space-x-2">
+                            <button onclick="openEditPaymentModeModal('${pm.name}', ${pm.openingBalance || 0})" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
+                            <button onclick="deletePaymentMode('${pm.name}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Add Payment Mode Handler
+        document.getElementById('payment-mode-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('new-pm-name').value.trim();
+            const openingBalance = parseFloat(document.getElementById('new-pm-opening').value) || 0;
+
+            const exists = paymentModes.some(p => p.name.toLowerCase() === name.toLowerCase());
+
+            if (name && !exists) {
+                paymentModes.push({ name, openingBalance });
+                await saveDataToFirebase();
+                updatePaymentModeOptions();
+                renderPaymentModesManager();
+                alert(`Payment mode "${name}" added successfully!`);
+                this.reset();
+                document.getElementById('new-pm-opening').value = '0';
+            } else {
+                alert('Payment mode already exists or invalid name.');
+            }
+        });
+
+        function openEditPaymentModeModal(pmName, openingBalance) {
+            document.getElementById('edit-pm-old-name').value = pmName;
+            document.getElementById('edit-pm-new-name').value = pmName;
+            document.getElementById('edit-pm-opening').value = openingBalance;
+            document.getElementById('edit-pm-modal').classList.remove('hidden');
+        }
+
+        function closeEditPaymentModeModal() {
+            document.getElementById('edit-pm-modal').classList.add('hidden');
+        }
+
+        document.getElementById('edit-pm-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const oldName = document.getElementById('edit-pm-old-name').value;
+            const newName = document.getElementById('edit-pm-new-name').value.trim();
+            const newOpening = parseFloat(document.getElementById('edit-pm-opening').value) || 0;
+
+            if (!newName) {
+                closeEditPaymentModeModal();
+                return;
+            }
+
+            if (newName.toLowerCase() !== oldName.toLowerCase()) {
+                const exists = paymentModes.some(p => p.name.toLowerCase() === newName.toLowerCase());
+                if (exists) {
+                    alert('A payment mode with this name already exists.');
+                    return;
+                }
+            }
+
+            const pmObj = paymentModes.find(p => p.name === oldName);
+            if (pmObj) {
+                pmObj.name = newName;
+                pmObj.openingBalance = newOpening;
+            }
+
+            // Update associated transactions
+            if (newName !== oldName) {
+                transactions.forEach(t => {
+                    if (t.paymentMode === oldName) {
+                        t.paymentMode = newName;
+                    }
+                });
+            }
+
+            await saveAndRefresh();
+            closeEditPaymentModeModal();
+            renderPaymentModesManager();
+            alert(`Payment mode updated successfully!`);
+        });
+
+        async function deletePaymentMode(pmName) {
+            if (paymentModes.length <= 1) {
+                alert('You must keep at least one payment mode.');
+                return;
+            }
+            if (confirm(`Are you sure you want to delete payment mode "${pmName}"? Transactions associated with this mode will be reassigned to "${paymentModes[0].name}".`)) {
+                paymentModes = paymentModes.filter(p => p.name !== pmName);
+                
+                // Reassign transactions
+                transactions.forEach(t => {
+                    if (t.paymentMode === pmName) {
+                        t.paymentMode = paymentModes[0].name;
+                    }
+                });
+
+                await saveAndRefresh();
+                renderPaymentModesManager();
+                alert(`Payment mode "${pmName}" deleted successfully.`);
+            }
+        }
+
+        function openEditCategoryModal(type, catName) {
+            document.getElementById('edit-cat-type-val').value = type;
+            document.getElementById('edit-cat-old-name').value = catName;
+            document.getElementById('edit-cat-new-name').value = catName;
+            document.getElementById('edit-category-modal').classList.remove('hidden');
+        }
+
+        function closeEditCategoryModal() {
+            document.getElementById('edit-category-modal').classList.add('hidden');
+        }
+
+        document.getElementById('edit-category-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const type = document.getElementById('edit-cat-type-val').value;
+            const oldName = document.getElementById('edit-cat-old-name').value;
+            const newName = document.getElementById('edit-cat-new-name').value.trim();
+
+            if (!newName || newName === oldName) {
+                closeEditCategoryModal();
+                return;
+            }
+
+            if (categories[type].includes(newName)) {
+                alert('A category with this name already exists.');
+                return;
+            }
+
+            const index = categories[type].indexOf(oldName);
+            if (index !== -1) {
+                categories[type][index] = newName;
+            }
+
+            transactions.forEach(t => {
+                if (t.type === type && t.category === oldName) {
+                    t.category = newName;
+                }
+            });
+
+            await saveAndRefresh();
+            closeEditCategoryModal();
+            renderCategoriesManager();
+            alert(`Category renamed from "${oldName}" to "${newName}" successfully!`);
+        });
+
+        async function deleteCategory(type, catName) {
+            if (confirm(`Are you sure you want to delete category "${catName}"?`)) {
+                categories[type] = categories[type].filter(c => c !== catName);
+                await saveAndRefresh();
+                renderCategoriesManager();
+                alert(`Category "${catName}" deleted successfully.`);
+            }
+        }
+
         function printHistory() {
             document.body.classList.add('printing-history');
             document.body.classList.remove('printing-category', 'printing-balance');
@@ -760,8 +1119,6 @@
             window.print();
             document.body.classList.remove('printing-balance');
         }
-
-        // --- LOAN MANAGEMENT LOGIC ---
 
         document.getElementById('loan-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -818,7 +1175,7 @@
             if (!loan) return;
 
             if (payAmount > loan.amount) {
-                if (!confirm(`Repayment amount (₹${payAmount.toFixed(2)}) exceeds outstanding principal (₹${loan.amount.toFixed(2)}). Do you want to settle/close this loan balance to ₹0.00?`)) {
+                if (!confirm(`Repayment amount exceeds outstanding principal. Settle loan balance to ₹0.00?`)) {
                     return;
                 }
                 loan.amount = 0;
@@ -832,7 +1189,7 @@
             await saveDataToFirebase();
             renderBalanceSheet();
             closePayLoanModal();
-            alert(`Repayment of ₹${payAmount.toFixed(2)} on ${payDate} successfully applied.`);
+            alert(`Repayment of ₹${payAmount.toFixed(2)} applied.`);
         });
 
         function viewLoanHistory(id) {
@@ -844,14 +1201,14 @@
             tbody.innerHTML = '';
             
             if (!loan.history || loan.history.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-gray-500 italic">No repayments recorded yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-slate-400 italic">No repayments recorded yet.</td></tr>';
             } else {
                 const sortedHistory = [...loan.history].sort((a, b) => new Date(b.date) - new Date(a.date));
                 sortedHistory.forEach(h => {
                     tbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-3 text-gray-600">${h.date}</td>
-                            <td class="py-2 px-3 font-semibold text-green-600">₹${h.amount.toFixed(2)}</td>
+                        <tr class="border-b border-slate-200 hover:bg-slate-100">
+                            <td class="py-2.5 px-3 text-slate-700">${h.date}</td>
+                            <td class="py-2.5 px-3 font-semibold text-emerald-700">₹${h.amount.toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -864,7 +1221,7 @@
         }
 
         async function deleteLoan(id) {
-            if (confirm("Are you sure you want to delete this loan record entirely?")) {
+            if (confirm("Are you sure you want to delete this loan record?")) {
                 loans = loans.filter(l => l.id !== id);
                 await saveDataToFirebase();
                 renderBalanceSheet();
@@ -880,6 +1237,7 @@
                 categories[type].push(name);
                 await saveDataToFirebase();
                 updateCategoryOptions();
+                renderCategoriesManager();
                 alert(`Category "${name}" defined successfully!`);
                 this.reset();
             } else {
@@ -925,7 +1283,6 @@
             renderCharts(filtered);
         }
 
-        // --- CATEGORY REPORT TAB LOGIC ---
         function resetCategoryReportFilters() {
             document.getElementById('cat-rep-start').value = '';
             document.getElementById('cat-rep-end').value = '';
@@ -989,13 +1346,13 @@
             incomeTbody.innerHTML = '';
             const sortedIncomes = Object.entries(incomeMap).sort((a, b) => b[1] - a[1]);
             if (sortedIncomes.length === 0 || sortedIncomes.every(([k, v]) => v === 0)) {
-                incomeTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-gray-400 italic">No income records found for this range.</td></tr>`;
+                incomeTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-slate-400 italic">No income records found for this range.</td></tr>`;
             } else {
                 sortedIncomes.forEach(([cat, amt]) => {
                     incomeTbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-3 font-medium text-gray-700">${cat}</td>
-                            <td class="py-2 px-3 text-right font-semibold text-green-600">₹${amt.toFixed(2)}</td>
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
+                            <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">₹${amt.toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -1005,13 +1362,13 @@
             expenseTbody.innerHTML = '';
             const sortedExpenses = Object.entries(expenseMap).sort((a, b) => b[1] - a[1]);
             if (sortedExpenses.length === 0 || sortedExpenses.every(([k, v]) => v === 0)) {
-                expenseTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-gray-400 italic">No expense records found for this range.</td></tr>`;
+                expenseTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-slate-400 italic">No expense records found for this range.</td></tr>`;
             } else {
                 sortedExpenses.forEach(([cat, amt]) => {
                     expenseTbody.innerHTML += `
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="py-2 px-3 font-medium text-gray-700">${cat}</td>
-                            <td class="py-2 px-3 text-right font-semibold text-red-600">₹${amt.toFixed(2)}</td>
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
+                            <td class="py-2.5 px-3 text-right font-semibold text-rose-700">₹${amt.toFixed(2)}</td>
                         </tr>
                     `;
                 });
@@ -1032,7 +1389,7 @@
                     const matchRemark = t.remark.toLowerCase().includes(searchQuery);
                     const matchAmount = t.amount.toString().includes(searchQuery);
                     const matchType = t.type.toLowerCase().includes(searchQuery);
-                    const matchMode = (t.paymentMode || 'bank').toLowerCase().includes(searchQuery);
+                    const matchMode = (t.paymentMode || '').toLowerCase().includes(searchQuery);
                     const matchDate = t.date.includes(searchQuery);
 
                     if (!matchCategory && !matchRemark && !matchAmount && !matchType && !matchMode && !matchDate) {
@@ -1069,33 +1426,138 @@
         }
 
         function updateMetrics(filteredTransactions) {
-            let allIncome = 0, allExpense = 0;
-            transactions.forEach(t => {
-                if (t.type === 'income') allIncome += t.amount;
-                else allExpense += t.amount;
+            let pmInc = {};
+            let pmExp = {};
+            paymentModes.forEach(pm => {
+                pmInc[pm.name] = 0;
+                pmExp[pm.name] = 0;
             });
-            const netAll = allIncome - allExpense;
-            document.getElementById('net-balance').textContent = `₹${netAll.toFixed(2)}`;
 
+            transactions.forEach(t => {
+                const mode = t.paymentMode || paymentModes[0].name;
+                if (pmInc[mode] === undefined) { pmInc[mode] = 0; pmExp[mode] = 0; }
+                if (t.type === 'income') {
+                    pmInc[mode] += t.amount;
+                } else {
+                    pmExp[mode] += t.amount;
+                }
+            });
+
+            let totalNetBalance = 0;
+            const pmContainer = document.getElementById('dash-payment-modes-container');
+            pmContainer.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const opening = pm.openingBalance || 0;
+                const inc = pmInc[pm.name] || 0;
+                const exp = pmExp[pm.name] || 0;
+                const bal = opening + inc - exp;
+                totalNetBalance += bal;
+
+                pmContainer.innerHTML += `
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-bold tracking-wider text-emerald-800 uppercase">${pm.name} Ledger Balance</span>
+                            <p class="text-3xl font-extrabold text-slate-900 mt-2">₹${bal.toFixed(2)}</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 space-y-1">
+                            <div>Opening: <strong>₹${opening.toFixed(2)}</strong></div>
+                            <div class="flex justify-between">
+                                <span>In: <strong class="text-emerald-700">₹${inc.toFixed(2)}</strong></span>
+                                <span>Out: <strong class="text-rose-700">₹${exp.toFixed(2)}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('net-balance').textContent = `₹${totalNetBalance.toFixed(2)}`;
+
+            // All-Time breakdown lists
+            let allTotalInc = 0, allTotalExp = 0;
+            const allIncEl = document.getElementById('dash-all-income-modes');
+            const allExpEl = document.getElementById('dash-all-expense-modes');
+            allIncEl.innerHTML = '';
+            allExpEl.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const inc = pmInc[pm.name] || 0;
+                const exp = pmExp[pm.name] || 0;
+                allTotalInc += inc;
+                allTotalExp += exp;
+
+                allIncEl.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                        <span class="text-slate-700">${pm.name}:</span>
+                        <span class="font-bold text-emerald-700">₹${inc.toFixed(2)}</span>
+                    </div>
+                `;
+                allExpEl.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                        <span class="text-slate-700">${pm.name}:</span>
+                        <span class="font-bold text-rose-700">₹${exp.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('dash-all-total-inc').textContent = `₹${allTotalInc.toFixed(2)}`;
+            document.getElementById('dash-all-total-exp').textContent = `₹${allTotalExp.toFixed(2)}`;
+
+            // Current Month Calculations
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('current-month-label').textContent = `${monthNames[currentMonth]} ${currentYear}`;
 
-            let monthIncome = 0;
-            let monthExpense = 0;
+            let monthPmInc = {};
+            let monthPmExp = {};
+            paymentModes.forEach(pm => {
+                monthPmInc[pm.name] = 0;
+                monthPmExp[pm.name] = 0;
+            });
 
             transactions.forEach(t => {
                 const tDate = new Date(t.date);
                 if (tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth) {
-                    if (t.type === 'income') monthIncome += t.amount;
-                    else monthExpense += t.amount;
+                    const mode = t.paymentMode || paymentModes[0].name;
+                    if (monthPmInc[mode] === undefined) { monthPmInc[mode] = 0; monthPmExp[mode] = 0; }
+                    if (t.type === 'income') {
+                        monthPmInc[mode] += t.amount;
+                    } else {
+                        monthPmExp[mode] += t.amount;
+                    }
                 }
             });
 
-            document.getElementById('dash-month-income').textContent = `₹${monthIncome.toFixed(2)}`;
-            document.getElementById('dash-month-expense').textContent = `₹${monthExpense.toFixed(2)}`;
-            document.getElementById('dash-all-income').textContent = `₹${allIncome.toFixed(2)}`;
-            document.getElementById('dash-all-expense').textContent = `₹${allExpense.toFixed(2)}`;
+            let monthTotalInc = 0, monthTotalExp = 0;
+            const monthIncEl = document.getElementById('dash-month-income-modes');
+            const monthExpEl = document.getElementById('dash-month-expense-modes');
+            monthIncEl.innerHTML = '';
+            monthExpEl.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const inc = monthPmInc[pm.name] || 0;
+                const exp = monthPmExp[pm.name] || 0;
+                monthTotalInc += inc;
+                monthTotalExp += exp;
+
+                monthIncEl.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                        <span class="text-slate-700">${pm.name}:</span>
+                        <span class="font-bold text-emerald-700">₹${inc.toFixed(2)}</span>
+                    </div>
+                `;
+                monthExpEl.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
+                        <span class="text-slate-700">${pm.name}:</span>
+                        <span class="font-bold text-rose-700">₹${exp.toFixed(2)}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('dash-month-total-inc').textContent = `₹${monthTotalInc.toFixed(2)}`;
+            document.getElementById('dash-month-total-exp').textContent = `₹${monthTotalExp.toFixed(2)}`;
         }
 
         function renderTransactionsList(filteredTransactions) {
@@ -1105,31 +1567,31 @@
             const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-gray-400">No transactions recorded for this range/search.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-slate-400">No transactions recorded for this range/search.</td></tr>`;
                 return;
             }
 
             sorted.forEach(t => {
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-gray-200 hover:bg-gray-50";
+                tr.className = "border-b border-slate-100 hover:bg-slate-50";
 
                 const receiptHtml = t.receipt 
-                    ? `<a href="${t.receipt}" target="_blank" class="text-indigo-600 underline font-semibold">View</a>` 
+                    ? `<a href="${t.receipt}" target="_blank" class="text-emerald-700 hover:text-emerald-900 underline font-semibold">View</a>` 
                     : '-';
 
                 tr.innerHTML = `
                     <td class="py-3 px-3">${t.date}</td>
-                    <td class="py-3 px-3 uppercase font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">${t.type}</td>
-                    <td class="py-3 px-3">${t.category}</td>
-                    <td class="py-3 px-3"><span class="px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-700">${t.paymentMode || 'Bank'}</span></td>
-                    <td class="py-3 px-3 font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                    <td class="py-3 px-3 uppercase font-semibold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">${t.type}</td>
+                    <td class="py-3 px-3 text-slate-800">${t.category}</td>
+                    <td class="py-3 px-3"><span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 border border-slate-200">${t.paymentMode || paymentModes[0].name}</span></td>
+                    <td class="py-3 px-3 font-bold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">
                         ${t.type === 'income' ? '+' : '-'}₹${t.amount.toFixed(2)}
                     </td>
-                    <td class="py-3 px-3 text-gray-700 italic">${t.remark || '-'}</td>
+                    <td class="py-3 px-3 text-slate-500 italic">${t.remark || '-'}</td>
                     <td class="py-3 px-3">${receiptHtml}</td>
                     <td class="py-3 px-3 text-center no-print space-x-2">
-                        <button onclick="editTransaction(${t.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold">Edit</button>
-                        <button onclick="deleteTransaction(${t.id})" class="text-red-500 hover:text-red-700 font-semibold">Delete</button>
+                        <button onclick="editTransaction(${t.id})" class="text-emerald-700 hover:text-emerald-900 font-semibold">Edit</button>
+                        <button onclick="deleteTransaction(${t.id})" class="text-rose-700 hover:text-rose-900 font-semibold">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1139,18 +1601,24 @@
         function renderBalanceSheet() {
             let totalIncome = 0;
             let totalExpense = 0;
+            let totalOpening = 0;
+
+            paymentModes.forEach(pm => {
+                totalOpening += (pm.openingBalance || 0);
+            });
+
             transactions.forEach(t => {
                 if (t.type === 'income') totalIncome += t.amount;
                 else totalExpense += t.amount;
             });
-            const netCash = totalIncome - totalExpense;
+            const netCash = totalOpening + totalIncome - totalExpense;
 
             document.getElementById('bs-total-income').textContent = `₹${totalIncome.toFixed(2)}`;
             document.getElementById('bs-total-expense').textContent = `₹${totalExpense.toFixed(2)}`;
-            document.getElementById('bs-net-surplus').textContent = `₹${netCash.toFixed(2)}`;
+            document.getElementById('bs-net-surplus').textContent = `₹${(totalIncome - totalExpense).toFixed(2)}`;
 
             document.getElementById('bs-asset-cash').textContent = `₹${netCash.toFixed(2)}`;
-            document.getElementById('bs-asset-income').textContent = `₹${totalIncome.toFixed(2)}`;
+            document.getElementById('bs-asset-income').textContent = `₹${(totalOpening + totalIncome).toFixed(2)}`;
             document.getElementById('bs-total-assets').textContent = `₹${netCash.toFixed(2)}`;
 
             const loanTbody = document.getElementById('loan-table-body');
@@ -1158,21 +1626,21 @@
 
             let totalLiabilities = 0;
             if (loans.length === 0) {
-                loanTbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-gray-400 italic">No loan liabilities recorded</td></tr>`;
+                loanTbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-slate-400 italic">No loan liabilities recorded</td></tr>`;
             } else {
                 loans.forEach(l => {
                     totalLiabilities += l.amount;
                     const tr = document.createElement('tr');
-                    tr.className = "border-b hover:bg-gray-50";
+                    tr.className = "border-b border-slate-200 hover:bg-slate-50";
                     tr.innerHTML = `
-                        <td class="py-2 text-gray-600">${l.date || '-'}</td>
-                        <td class="py-2 font-medium">${l.name}</td>
-                        <td class="py-2">${l.rate}%</td>
-                        <td class="py-2 font-semibold text-red-600">₹${l.amount.toFixed(2)}</td>
-                        <td class="py-2 text-center no-print space-x-2">
-                            <button onclick="openPayLoanModal(${l.id})" class="text-green-600 hover:text-green-800 font-semibold">Pay</button>
-                            <button onclick="viewLoanHistory(${l.id})" class="text-blue-600 hover:text-blue-800 font-semibold">History</button>
-                            <button onclick="deleteLoan(${l.id})" class="text-red-500 hover:text-red-700 font-semibold">Delete</button>
+                        <td class="py-2.5 text-slate-500">${l.date || '-'}</td>
+                        <td class="py-2.5 font-medium text-slate-800">${l.name}</td>
+                        <td class="py-2.5 text-slate-600">${l.rate}%</td>
+                        <td class="py-2.5 font-semibold text-rose-700">₹${l.amount.toFixed(2)}</td>
+                        <td class="py-2.5 text-center no-print space-x-2">
+                            <button onclick="openPayLoanModal(${l.id})" class="text-emerald-700 hover:text-emerald-900 font-semibold">Pay</button>
+                            <button onclick="viewLoanHistory(${l.id})" class="text-teal-700 hover:text-teal-900 font-semibold">History</button>
+                            <button onclick="deleteLoan(${l.id})" class="text-rose-700 hover:text-rose-900 font-semibold">Delete</button>
                         </td>
                     `;
                     loanTbody.appendChild(tr);
@@ -1185,9 +1653,9 @@
             const netWorthEl = document.getElementById('bs-net-worth');
             netWorthEl.textContent = `₹${netWorth.toFixed(2)}`;
             if (netWorth < 0) {
-                netWorthEl.className = "text-2xl font-bold text-red-600";
+                netWorthEl.className = "text-2xl font-extrabold text-rose-300";
             } else {
-                netWorthEl.className = "text-2xl font-bold text-indigo-900";
+                netWorthEl.className = "text-2xl font-extrabold text-emerald-300";
             }
         }
 
@@ -1209,14 +1677,16 @@
                     labels: Object.keys(incomeDataMap),
                     datasets: [{
                         data: Object.values(incomeDataMap),
-                        backgroundColor: ['#34d399', '#60a5fa', '#38bdf8', '#818cf8', '#c084fc']
+                        backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
-                        title: { display: true, text: 'Income Breakdown Pie Chart' }
+                        legend: { position: 'bottom', labels: { boxWidth: 12, color: '#334155' } },
+                        title: { display: true, text: 'Income Breakdown Pie Chart', color: '#1e293b', font: { size: 14 } }
                     }
                 }
             });
@@ -1238,14 +1708,16 @@
                     labels: Object.keys(expenseDataMap),
                     datasets: [{
                         data: Object.values(expenseDataMap),
-                        backgroundColor: ['#f87171', '#fb923c', '#fbbf24', '#f472b6', '#a78bfa']
+                        backgroundColor: ['#b91c1c', '#dc2626', '#f87171', '#fca5a5', '#fecaca'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12 } },
-                        title: { display: true, text: 'Expense Breakdown Pie Chart' }
+                        legend: { position: 'bottom', labels: { boxWidth: 12, color: '#334155' } },
+                        title: { display: true, text: 'Expense Breakdown Pie Chart', color: '#1e293b', font: { size: 14 } }
                     }
                 }
             });
@@ -1253,9 +1725,10 @@
 
         function exportDataBackup() {
             const backupData = {
-                version: "1.1",
+                version: "1.4",
                 exportDate: new Date().toISOString(),
                 categories: categories,
+                paymentModes: paymentModes,
                 transactions: transactions,
                 loans: loans
             };
@@ -1287,6 +1760,7 @@
                     }
 
                     categories = imported.categories;
+                    paymentModes = normalizePaymentModes(imported.paymentModes);
                     transactions = imported.transactions;
                     loans = imported.loans;
 
