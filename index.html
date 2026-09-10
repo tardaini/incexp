@@ -22,6 +22,8 @@
             /* Print History Mode */
             body.printing-history #sec-history { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
             body.printing-history .print-only-history { display: block !important; margin-bottom: 20px; }
+            body.printing-history .overflow-x-auto, body.printing-history .max-h-96 { max-height: none !important; overflow: visible !important; }
+            body.printing-history .history-summary-box { display: block !important; page-break-before: always; margin-top: 30px; }
 
             /* Print Category Breakdown Mode */
             body.printing-category #sec-category-report { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
@@ -31,12 +33,16 @@
             body.printing-balance #sec-balance-sheet { display: block !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
             body.printing-balance .print-only-balance { display: block !important; margin-bottom: 20px; }
 
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
             th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
-            th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
-            .shadow-md, .shadow-xl { box-shadow: none !important; }
+            th { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .shadow-md, .shadow-xl, .shadow-sm { box-shadow: none !important; }
         }
         .print-only-history, .print-only-category, .print-only-balance { display: none; }
+        .history-summary-box { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-100 via-zinc-100 to-stone-200 min-h-screen text-slate-800 font-sans leading-normal tracking-normal">
@@ -432,6 +438,29 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Last Page Summary Block for Print Filtered History -->
+                <div class="history-summary-box bg-white border border-slate-200 p-6 rounded-2xl shadow-sm mt-6">
+                    <h2 class="text-xl font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Financial Summary (Filtered Range)</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-slate-500 uppercase">Opening Balance</span>
+                            <p id="hist-sum-opening" class="text-xl font-extrabold text-slate-800 mt-1">₹0.00</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-emerald-700 uppercase">Total Income</span>
+                            <p id="hist-sum-income" class="text-xl font-extrabold text-emerald-700 mt-1">₹0.00</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <span class="text-xs font-bold text-rose-700 uppercase">Total Expenses</span>
+                            <p id="hist-sum-expense" class="text-xl font-extrabold text-rose-700 mt-1">₹0.00</p>
+                        </div>
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                            <span class="text-xs font-bold text-emerald-900 uppercase">Closing Balance</span>
+                            <p id="hist-sum-closing" class="text-xl font-extrabold text-emerald-800 mt-1">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <!-- BALANCE SHEET SECTION -->
@@ -690,7 +719,6 @@
             income: ['Salary', 'Investments', 'Gifts'],
             expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport']
         };
-        // Can be array of strings (legacy) or objects: { name: string, openingBalance: number }
         let paymentModes = [
             { name: 'Cash', openingBalance: 0 },
             { name: 'Bank', openingBalance: 0 }
@@ -953,7 +981,6 @@
             });
         }
 
-        // Add Payment Mode Handler
         document.getElementById('payment-mode-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('new-pm-name').value.trim();
@@ -1010,7 +1037,6 @@
                 pmObj.openingBalance = newOpening;
             }
 
-            // Update associated transactions
             if (newName !== oldName) {
                 transactions.forEach(t => {
                     if (t.paymentMode === oldName) {
@@ -1033,7 +1059,6 @@
             if (confirm(`Are you sure you want to delete payment mode "${pmName}"? Transactions associated with this mode will be reassigned to "${paymentModes[0].name}".`)) {
                 paymentModes = paymentModes.filter(p => p.name !== pmName);
                 
-                // Reassign transactions
                 transactions.forEach(t => {
                     if (t.paymentMode === pmName) {
                         t.paymentMode = paymentModes[0].name;
@@ -1409,8 +1434,9 @@
 
         function applyHistoryFilters() {
             const filtered = getFilteredHistoryTransactions();
+            const startDate = document.getElementById('hist-filter-start').value;
             
-            const startStr = document.getElementById('hist-filter-start').value || 'Beginning';
+            const startStr = startDate || 'Beginning';
             const endStr = document.getElementById('hist-filter-end').value || 'Present';
             document.getElementById('print-range-label').textContent = `${startStr} to ${endStr}`;
 
@@ -1421,6 +1447,31 @@
             });
             const rangeNet = rangeIncome - rangeExpense;
             document.getElementById('print-range-net').textContent = `₹${rangeNet.toFixed(2)}`;
+
+            // Calculate Opening, Income, Expenses, and Closing Balance for the filtered range
+            let totalInitialOpening = 0;
+            paymentModes.forEach(pm => {
+                totalInitialOpening += (pm.openingBalance || 0);
+            });
+
+            let priorIncome = 0;
+            let priorExpense = 0;
+            if (startDate) {
+                transactions.forEach(t => {
+                    if (t.date < startDate) {
+                        if (t.type === 'income') priorIncome += t.amount;
+                        else priorExpense += t.amount;
+                    }
+                });
+            }
+
+            const openingBalanceForRange = totalInitialOpening + priorIncome - priorExpense;
+            const closingBalanceForRange = openingBalanceForRange + rangeIncome - rangeExpense;
+
+            document.getElementById('hist-sum-opening').textContent = `₹${openingBalanceForRange.toFixed(2)}`;
+            document.getElementById('hist-sum-income').textContent = `₹${rangeIncome.toFixed(2)}`;
+            document.getElementById('hist-sum-expense').textContent = `₹${rangeExpense.toFixed(2)}`;
+            document.getElementById('hist-sum-closing').textContent = `₹${closingBalanceForRange.toFixed(2)}`;
 
             renderTransactionsList(filtered);
         }
@@ -1473,7 +1524,6 @@
 
             document.getElementById('net-balance').textContent = `₹${totalNetBalance.toFixed(2)}`;
 
-            // All-Time breakdown lists
             let allTotalInc = 0, allTotalExp = 0;
             const allIncEl = document.getElementById('dash-all-income-modes');
             const allExpEl = document.getElementById('dash-all-expense-modes');
@@ -1503,7 +1553,6 @@
             document.getElementById('dash-all-total-inc').textContent = `₹${allTotalInc.toFixed(2)}`;
             document.getElementById('dash-all-total-exp').textContent = `₹${allTotalExp.toFixed(2)}`;
 
-            // Current Month Calculations
             const now = new Date();
             const currentYear = now.getFullYear();
             const currentMonth = now.getMonth();
@@ -1725,7 +1774,7 @@
 
         function exportDataBackup() {
             const backupData = {
-                version: "1.4",
+                version: "1.5",
                 exportDate: new Date().toISOString(),
                 categories: categories,
                 paymentModes: paymentModes,
