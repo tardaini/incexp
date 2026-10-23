@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Tracker with Custom Payment Modes</title>
+    <title>Financial Tracker with Custom Payment Modes & Cloud Storage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Firebase SDKs (v10 Compat for CDN usage in a single HTML file) -->
+    <!-- Firebase SDKs (v10 Compat with Storage Support) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
 
     <style>
@@ -78,26 +79,20 @@
 
             <!-- DASHBOARD SECTION -->
             <section id="sec-dashboard" class="section-panel space-y-6">
-                
-                <!-- Dynamic Payment Modes Liquidity Breakdown -->
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
                     <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                         <h2 class="text-xl font-bold text-slate-900">🏦 Payment Modes Liquidity & Ledger Balances</h2>
                         <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-medium">Real-time Accounting Ledger</span>
                     </div>
-                    <div id="dash-payment-modes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                        <!-- Dynamically populated via JS -->
-                    </div>
+                    <div id="dash-payment-modes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4"></div>
                 </div>
 
-                <!-- Monthly Detailed Payment Mode Income/Expense Breakdown -->
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
                     <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                         <h2 class="text-xl font-bold text-slate-900">📅 Current Calendar Month Payment Metrics</h2>
                         <span id="current-month-label" class="text-xs bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1 rounded-full font-medium">This Month</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <!-- Month Income Split -->
                         <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
                             <h3 class="font-bold text-emerald-700 text-sm tracking-wide uppercase">Monthly Incomes by Payment Mode</h3>
                             <div id="dash-month-income-modes" class="space-y-2"></div>
@@ -106,8 +101,6 @@
                                 <span id="dash-month-total-inc" class="text-emerald-700 text-lg">₹0.00</span>
                             </div>
                         </div>
-
-                        <!-- Month Expense Split -->
                         <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
                             <h3 class="font-bold text-rose-700 text-sm tracking-wide uppercase">Monthly Expenses by Payment Mode</h3>
                             <div id="dash-month-expense-modes" class="space-y-2"></div>
@@ -119,14 +112,12 @@
                     </div>
                 </div>
 
-                <!-- All-Time Detailed Payment Mode Income/Expense Breakdown -->
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
                     <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
                         <h2 class="text-xl font-bold text-slate-900">📈 All-Time Cumulative Payment Metrics</h2>
                         <span class="text-xs bg-slate-100 text-slate-700 border border-slate-200 px-3 py-1 rounded-full font-medium">Lifetime History</span>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <!-- All Time Income Split -->
                         <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
                             <h3 class="font-bold text-emerald-700 text-sm tracking-wide uppercase">Lifetime Incomes by Payment Mode</h3>
                             <div id="dash-all-income-modes" class="space-y-2"></div>
@@ -135,8 +126,6 @@
                                 <span id="dash-all-total-inc" class="text-emerald-700 text-lg">₹0.00</span>
                             </div>
                         </div>
-
-                        <!-- All Time Expense Split -->
                         <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-3">
                             <h3 class="font-bold text-rose-700 text-sm tracking-wide uppercase">Lifetime Expenses by Payment Mode</h3>
                             <div id="dash-all-expense-modes" class="space-y-2"></div>
@@ -183,7 +172,7 @@
                             <input type="text" id="remark" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., Client meeting lunch, monthly payout">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Upload Receipt (Gallery / Camera)</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Upload Receipt (Cloud Storage)</label>
                             <input type="file" id="receipt-file" accept="image/*" capture="environment" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
                         </div>
                         <div class="flex gap-2 pt-2">
@@ -223,25 +212,20 @@
                         <div>
                             <h3 class="font-bold text-emerald-700 mb-3 text-sm tracking-wide uppercase">Income Categories</h3>
                             <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
-                                <table class="w-full text-left text-sm">
-                                    <tbody id="category-income-list"></tbody>
-                                </table>
+                                <table class="w-full text-left text-sm"><tbody id="category-income-list"></tbody></table>
                             </div>
                         </div>
                         <div>
                             <h3 class="font-bold text-rose-700 mb-3 text-sm tracking-wide uppercase">Expense Categories</h3>
                             <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
-                                <table class="w-full text-left text-sm">
-                                    <tbody id="category-expense-list"></tbody>
-                                </table>
+                                <table class="w-full text-left text-sm"><tbody id="category-expense-list"></tbody></table>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Payment Modes Manager Card -->
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-2xl mx-auto space-y-6 backdrop-blur-md">
-                    <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Manage Payment Modes (Cash, Bank, UPI, etc.)</h2>
+                    <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Manage Payment Modes</h2>
                     <form id="payment-mode-form" class="space-y-4 border-b border-slate-100 pb-6">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Payment Mode Name</label>
@@ -255,13 +239,10 @@
                             Add Payment Mode
                         </button>
                     </form>
-
                     <div>
                         <h3 class="font-bold text-teal-700 mb-3 text-sm tracking-wide uppercase">Active Payment Modes</h3>
                         <div class="border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto bg-slate-50">
-                            <table class="w-full text-left text-sm">
-                                <tbody id="payment-modes-list"></tbody>
-                            </table>
+                            <table class="w-full text-left text-sm"><tbody id="payment-modes-list"></tbody></table>
                         </div>
                     </div>
                 </div>
@@ -283,9 +264,7 @@
                             <input type="date" id="filter-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="applyFilters()">
                         </div>
                         <div>
-                            <button onclick="resetFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
-                                Reset Dates
-                            </button>
+                            <button onclick="resetFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">Reset Dates</button>
                         </div>
                     </div>
                 </div>
@@ -293,12 +272,8 @@
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
                     <h2 class="text-xl font-semibold mb-4 text-slate-900 border-b border-slate-100 pb-2">Visual Pie Charts</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <div class="relative h-64 flex justify-center items-center">
-                            <canvas id="incomePieChart"></canvas>
-                        </div>
-                        <div class="relative h-64 flex justify-center items-center">
-                            <canvas id="expensePieChart"></canvas>
-                        </div>
+                        <div class="relative h-64 flex justify-center items-center"><canvas id="incomePieChart"></canvas></div>
+                        <div class="relative h-64 flex justify-center items-center"><canvas id="expensePieChart"></canvas></div>
                     </div>
                 </div>
             </section>
@@ -308,18 +283,15 @@
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b border-slate-100 pb-2 gap-4">
                         <h2 class="text-xl font-semibold text-slate-900">Category-Wise Records & Totals</h2>
-                        <button onclick="printCategoryReport()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
-                            🖨️ Print Category Report
-                        </button>
+                        <button onclick="printCategoryReport()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">🖨️ Print Category Report</button>
                     </div>
-                    <p class="text-sm text-slate-600 mb-4">View your total income and expenses grouped by category between specific dates or for all time.</p>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date (Optional)</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
                             <input type="date" id="cat-rep-start" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="renderCategoryReport()">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">End Date (Optional)</label>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
                             <input type="date" id="cat-rep-end" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" onchange="renderCategoryReport()">
                         </div>
                         <div>
@@ -331,9 +303,7 @@
                             </select>
                         </div>
                         <div>
-                            <button onclick="resetCategoryReportFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
-                                Reset Filters
-                            </button>
+                            <button onclick="resetCategoryReportFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">Reset Filters</button>
                         </div>
                     </div>
                 </div>
@@ -351,12 +321,7 @@
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
-                                        <th class="py-2 px-3">Category</th>
-                                        <th class="py-2 px-3 text-right">Total Amount (₹)</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200"><th class="py-2 px-3">Category</th><th class="py-2 px-3 text-right">Total Amount (₹)</th></tr></thead>
                                 <tbody id="cat-income-table-body" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
@@ -369,12 +334,7 @@
                         </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse text-sm">
-                                <thead>
-                                    <tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
-                                        <th class="py-2 px-3">Category</th>
-                                        <th class="py-2 px-3 text-right">Total Amount (₹)</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200"><th class="py-2 px-3">Category</th><th class="py-2 px-3 text-right">Total Amount (₹)</th></tr></thead>
                                 <tbody id="cat-expense-table-body" class="divide-y divide-slate-100"></tbody>
                             </table>
                         </div>
@@ -387,9 +347,7 @@
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
                     <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                         <h2 class="text-xl font-semibold text-slate-900">History Filter, Search & Print</h2>
-                        <button onclick="printHistory()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
-                            🖨️ Print Filtered History
-                        </button>
+                        <button onclick="printHistory()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">🖨️ Print Filtered History</button>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
@@ -402,12 +360,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Search Keyword</label>
-                            <input type="text" id="hist-search-box" placeholder="Search category, remark, amount..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" oninput="applyHistoryFilters()">
+                            <input type="text" id="hist-search-box" placeholder="Search category, remark..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" oninput="applyHistoryFilters()">
                         </div>
                         <div>
-                            <button onclick="resetHistoryFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">
-                                Reset Filters
-                            </button>
+                            <button onclick="resetHistoryFilters()" class="w-full bg-slate-600 text-white font-semibold py-2.5 rounded-xl hover:bg-slate-700 transition">Reset Filters</button>
                         </div>
                     </div>
                 </div>
@@ -439,26 +395,13 @@
                     </div>
                 </div>
 
-                <!-- Last Page Summary Block for Print Filtered History -->
                 <div class="history-summary-box bg-white border border-slate-200 p-6 rounded-2xl shadow-sm mt-6">
                     <h2 class="text-xl font-bold text-slate-900 mb-4 border-b border-slate-100 pb-2">Financial Summary (Filtered Range)</h2>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <span class="text-xs font-bold text-slate-500 uppercase">Opening Balance</span>
-                            <p id="hist-sum-opening" class="text-xl font-extrabold text-slate-800 mt-1">₹0.00</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <span class="text-xs font-bold text-emerald-700 uppercase">Total Income</span>
-                            <p id="hist-sum-income" class="text-xl font-extrabold text-emerald-700 mt-1">₹0.00</p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <span class="text-xs font-bold text-rose-700 uppercase">Total Expenses</span>
-                            <p id="hist-sum-expense" class="text-xl font-extrabold text-rose-700 mt-1">₹0.00</p>
-                        </div>
-                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                            <span class="text-xs font-bold text-emerald-900 uppercase">Closing Balance</span>
-                            <p id="hist-sum-closing" class="text-xl font-extrabold text-emerald-800 mt-1">₹0.00</p>
-                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><span class="text-xs font-bold text-slate-500 uppercase">Opening Balance</span><p id="hist-sum-opening" class="text-xl font-extrabold text-slate-800 mt-1">₹0.00</p></div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><span class="text-xs font-bold text-emerald-700 uppercase">Total Income</span><p id="hist-sum-income" class="text-xl font-extrabold text-emerald-700 mt-1">₹0.00</p></div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><span class="text-xs font-bold text-rose-700 uppercase">Total Expenses</span><p id="hist-sum-expense" class="text-xl font-extrabold text-rose-700 mt-1">₹0.00</p></div>
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-200"><span class="text-xs font-bold text-emerald-900 uppercase">Closing Balance</span><p id="hist-sum-closing" class="text-xl font-extrabold text-emerald-800 mt-1">₹0.00</p></div>
                     </div>
                 </div>
             </section>
@@ -468,20 +411,16 @@
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md no-print">
                     <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
                         <h2 class="text-xl font-semibold text-slate-900">Manage Loans & Borrowed Liabilities</h2>
-                        <button onclick="printBalanceSheet()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">
-                            🖨️ Print Tax Balance Sheet & ITR Summary
-                        </button>
+                        <button onclick="printBalanceSheet()" class="bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold hover:bg-slate-900 transition flex items-center gap-2 shadow-sm">🖨️ Print Tax Balance Sheet</button>
                     </div>
-                    <p class="text-sm text-slate-600 mb-4">Add your active business/personal loans or credit lines below. Record repayments against any specific loan to subtract from its principal.</p>
-                    
                     <form id="loan-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Date Taken</label>
                             <input type="date" id="loan-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Loan / Lender Name</label>
-                            <input type="text" id="loan-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., HDFC Car Loan" required>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Loan Name</label>
+                            <input type="text" id="loan-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., Car Loan" required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Principal Amount (₹)</label>
@@ -489,94 +428,57 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Interest Rate (% p.a.)</label>
-                            <input type="number" id="loan-rate" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="e.g., 8.5">
+                            <input type="number" id="loan-rate" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="8.5">
                         </div>
                         <div>
-                            <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
-                                Add Loan Liability
-                            </button>
+                            <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">Add Loan Liability</button>
                         </div>
                     </form>
                 </div>
 
                 <div class="print-only-balance text-slate-900">
                     <h1 class="text-2xl font-bold">STATEMENT OF ASSETS, LIABILITIES & ITR SUMMARY</h1>
-                    <p class="text-sm text-slate-600 mt-1">Prepared for Tax / ITR Filing & Loan Application Purpose</p>
+                    <p class="text-sm text-slate-600 mt-1">Prepared for Tax / ITR Filing</p>
                     <p class="text-sm text-slate-600">Statement Date: <span id="bs-print-date"></span></p>
                 </div>
 
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6 backdrop-blur-md">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                         <h2 class="text-xl font-semibold text-slate-900">Complete Financial Position & ITR Record</h2>
-                        <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-3 py-1 rounded-full uppercase">ITR Ready Format</span>
+                        <span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-3 py-1 rounded-full uppercase">ITR Ready</span>
                     </div>
 
                     <div class="border border-emerald-200 rounded-xl p-4 bg-emerald-50/50 space-y-3">
-                        <h3 class="font-bold text-emerald-900 border-b border-emerald-200 pb-2 text-base">ANNUAL / LIFETIME INCOME & EXPENSE RECORD (FOR ITR REFERENCE)</h3>
+                        <h3 class="font-bold text-emerald-900 border-b border-emerald-200 pb-2 text-base">INCOME & EXPENSE RECORD</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
-                                <span class="text-slate-500 font-medium">Total Recorded Income:</span>
-                                <span id="bs-total-income" class="font-bold text-emerald-700 text-lg">₹0.00</span>
-                            </div>
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
-                                <span class="text-slate-500 font-medium">Total Recorded Expenses:</span>
-                                <span id="bs-total-expense" class="font-bold text-rose-700 text-lg">₹0.00</span>
-                            </div>
-                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200">
-                                <span class="text-slate-500 font-medium">Net Savings / Surplus:</span>
-                                <span id="bs-net-surplus" class="font-bold text-slate-800 text-lg">₹0.00</span>
-                            </div>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200"><span class="text-slate-500 font-medium">Total Income:</span><span id="bs-total-income" class="font-bold text-emerald-700 text-lg">₹0.00</span></div>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200"><span class="text-slate-500 font-medium">Total Expenses:</span><span id="bs-total-expense" class="font-bold text-rose-700 text-lg">₹0.00</span></div>
+                            <div class="flex flex-col text-sm py-1 bg-white p-3 rounded-xl border border-slate-200"><span class="text-slate-500 font-medium">Net Surplus:</span><span id="bs-net-surplus" class="font-bold text-slate-800 text-lg">₹0.00</span></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
-                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">ASSETS (Current & Liquid)</h3>
-                            <div class="flex justify-between text-sm py-1">
-                                <span class="text-slate-600">Net Liquidity Balance:</span>
-                                <span id="bs-asset-cash" class="font-semibold text-emerald-700">₹0.00</span>
-                            </div>
-                            <div class="flex justify-between text-sm py-1">
-                                <span class="text-slate-600">Total Incomes Considered:</span>
-                                <span id="bs-asset-income" class="font-semibold text-slate-800">₹0.00</span>
-                            </div>
-                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-slate-900">
-                                <span>Total Assets:</span>
-                                <span id="bs-total-assets">₹0.00</span>
-                            </div>
+                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">ASSETS (Liquid)</h3>
+                            <div class="flex justify-between text-sm py-1"><span class="text-slate-600">Net Liquidity Balance:</span><span id="bs-asset-cash" class="font-semibold text-emerald-700">₹0.00</span></div>
+                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-slate-900"><span>Total Assets:</span><span id="bs-total-assets">₹0.00</span></div>
                         </div>
 
                         <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
-                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">LIABILITIES (Loans & Debt)</h3>
+                            <h3 class="font-bold text-slate-800 border-b border-slate-200 pb-2 text-lg">LIABILITIES (Loans)</h3>
                             <div class="overflow-x-auto max-h-48">
                                 <table class="w-full text-left text-xs">
-                                    <thead>
-                                        <tr class="text-slate-500 border-b border-slate-200">
-                                            <th class="py-1">Date</th>
-                                            <th class="py-1">Lender / Facility</th>
-                                            <th class="py-1">Rate</th>
-                                            <th class="py-1">Outstanding (₹)</th>
-                                            <th class="py-1 text-center no-print">Action</th>
-                                        </tr>
-                                    </thead>
+                                    <thead><tr class="text-slate-500 border-b border-slate-200"><th class="py-1">Date</th><th class="py-1">Lender</th><th class="py-1">Rate</th><th class="py-1">Outstanding (₹)</th><th class="py-1 text-center no-print">Action</th></tr></thead>
                                     <tbody id="loan-table-body" class="divide-y divide-slate-200"></tbody>
                                 </table>
                             </div>
-                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-rose-700">
-                                <span>Total Liabilities:</span>
-                                <span id="bs-total-liabilities">₹0.00</span>
-                            </div>
+                            <div class="border-t border-slate-200 pt-2 flex justify-between font-bold text-base text-rose-700"><span>Total Liabilities:</span><span id="bs-total-liabilities">₹0.00</span></div>
                         </div>
                     </div>
 
                     <div class="bg-emerald-900 text-white rounded-xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h4 class="font-bold text-emerald-100 text-lg">Net Worth / Capital Account (Assets minus Liabilities)</h4>
-                            <p class="text-xs text-emerald-200/80">Valuation represents total declared financial standing for bank verification & ITR wealth schedules.</p>
-                        </div>
-                        <div id="bs-net-worth" class="text-2xl font-extrabold text-emerald-300">
-                            ₹0.00
-                        </div>
+                        <div><h4 class="font-bold text-emerald-100 text-lg">Net Worth / Capital Account</h4></div>
+                        <div id="bs-net-worth" class="text-2xl font-extrabold text-emerald-300">₹0.00</div>
                     </div>
                 </div>
             </section>
@@ -585,106 +487,66 @@
             <section id="sec-backup-restore" class="section-panel hidden space-y-6">
                 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm max-w-xl mx-auto space-y-6 backdrop-blur-md">
                     <h2 class="text-xl font-semibold text-slate-900 border-b border-slate-100 pb-2">Data Backup & Restore</h2>
-                    <p class="text-sm text-slate-600">Export your complete financial records, categories, payment modes, and loan data into a secure backup file, or restore them from a previous save.</p>
-                    
                     <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
                         <h3 class="font-bold text-slate-800">Backup Data</h3>
-                        <p class="text-xs text-slate-600">Download a JSON file containing all your transactional records and settings.</p>
-                        <button onclick="exportDataBackup()" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
-                            Download Backup File 📥
-                        </button>
+                        <button onclick="exportDataBackup()" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">Download Backup File 📥</button>
                     </div>
-
                     <div class="border border-slate-200 p-4 rounded-xl bg-slate-50 space-y-3">
                         <h3 class="font-bold text-slate-800">Restore Data</h3>
-                        <p class="text-xs text-slate-600">Select a previously exported JSON backup file to restore your data. <span class="text-rose-700 font-semibold">Warning: This will overwrite current cloud records.</span></p>
                         <input type="file" id="restore-file-input" accept=".json" class="w-full bg-white border border-slate-300 rounded-xl p-2 text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-100 file:text-emerald-800 hover:file:bg-emerald-200">
-                        <button onclick="importDataRestore()" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">
-                            Upload & Restore Data 📤
-                        </button>
+                        <button onclick="importDataRestore()" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">Upload & Restore Data 📤</button>
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
 
-    <!-- Edit Category Modal -->
+    <!-- Modals -->
     <div id="edit-category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
         <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
-            <button onclick="closeEditCategoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <button onclick="closeEditCategoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl">&times;</button>
             <h3 class="text-lg font-semibold mb-4 text-slate-900">Edit Category Name</h3>
             <form id="edit-category-form" class="space-y-4">
-                <input type="hidden" id="edit-cat-type-val">
-                <input type="hidden" id="edit-cat-old-name">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">New Category Name</label>
-                    <input type="text" id="edit-cat-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
-                </div>
-                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
-                    Update Category Name
-                </button>
+                <input type="hidden" id="edit-cat-type-val"><input type="hidden" id="edit-cat-old-name">
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">New Name</label><input type="text" id="edit-cat-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900" required></div>
+                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl">Update</button>
             </form>
         </div>
     </div>
 
-    <!-- Edit Payment Mode Modal -->
     <div id="edit-pm-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
         <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
-            <button onclick="closeEditPaymentModeModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <button onclick="closeEditPaymentModeModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl">&times;</button>
             <h3 class="text-lg font-semibold mb-4 text-slate-900">Edit Payment Mode</h3>
             <form id="edit-pm-form" class="space-y-4">
                 <input type="hidden" id="edit-pm-old-name">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">New Payment Mode Name</label>
-                    <input type="text" id="edit-pm-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Opening Balance (₹)</label>
-                    <input type="number" id="edit-pm-opening" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
-                </div>
-                <button type="submit" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl hover:bg-teal-800 transition shadow-sm">
-                    Update Payment Mode
-                </button>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">New Name</label><input type="text" id="edit-pm-new-name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900" required></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Opening Balance (₹)</label><input type="number" id="edit-pm-opening" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900" required></div>
+                <button type="submit" class="w-full bg-teal-700 text-white font-semibold py-2.5 rounded-xl">Update</button>
             </form>
         </div>
     </div>
 
-    <!-- Payment Modal -->
     <div id="pay-loan-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
         <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
-            <button onclick="closePayLoanModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <button onclick="closePayLoanModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl">&times;</button>
             <h3 class="text-lg font-semibold mb-4 text-slate-900" id="pay-loan-title">Pay Loan</h3>
             <form id="pay-loan-form" class="space-y-4">
                 <input type="hidden" id="pay-loan-id">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Repayment Amount (₹)</label>
-                    <input type="number" id="pay-loan-amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">Date of Payment</label>
-                    <input type="date" id="pay-loan-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
-                </div>
-                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
-                    Submit Repayment
-                </button>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Repayment Amount (₹)</label><input type="number" id="pay-loan-amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900" required></div>
+                <div><label class="block text-sm font-medium text-slate-700 mb-1">Date</label><input type="date" id="pay-loan-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900" required></div>
+                <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl">Submit</button>
             </form>
         </div>
     </div>
 
-    <!-- Loan History Modal -->
     <div id="loan-history-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
         <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full relative shadow-xl">
-            <button onclick="closeLoanHistoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
-            <h3 class="text-lg font-semibold mb-4 text-slate-900" id="loan-history-title">Repayment History</h3>
+            <button onclick="closeLoanHistoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl">&times;</button>
+            <h3 class="text-lg font-semibold mb-4 text-slate-900" id="loan-history-title">History</h3>
             <div class="overflow-y-auto max-h-64 border border-slate-200 rounded-xl bg-slate-50">
                 <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200 bg-white text-slate-600">
-                            <th class="py-2.5 px-3">Payment Date</th>
-                            <th class="py-2.5 px-3">Amount Paid (₹)</th>
-                        </tr>
-                    </thead>
+                    <thead><tr class="border-b border-slate-200 bg-white text-slate-600"><th class="py-2.5 px-3">Date</th><th class="py-2.5 px-3">Amount (₹)</th></tr></thead>
                     <tbody id="loan-history-body" class="divide-y divide-slate-200 text-slate-700"></tbody>
                 </table>
             </div>
@@ -692,7 +554,6 @@
     </div>
 
     <script>
-        // --- Firebase Configuration & Initialization ---
         const firebaseConfig = {
             apiKey: "AIzaSyD_47_mSsne5rpg-yECnu5RybLgHyQ8erQ",
             authDomain: "ieapp-64fe9.firebaseapp.com",
@@ -707,40 +568,26 @@
         firebase.analytics();
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
-        // Authenticate anonymously so Firestore write rules pass successfully
-        auth.signInAnonymously().catch((error) => {
-            console.error("Firebase Auth Error:", error);
-        });
+        auth.signInAnonymously().catch((error) => console.error("Auth Error:", error));
 
         const SHARED_DOC_ID = "default_user_data";
 
-        let categories = {
-            income: ['Salary', 'Investments', 'Gifts'],
-            expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport']
-        };
-        let paymentModes = [
-            { name: 'Cash', openingBalance: 0 },
-            { name: 'Bank', openingBalance: 0 }
-        ];
+        let categories = { income: ['Salary', 'Investments', 'Gifts'], expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport'] };
+        let paymentModes = [{ name: 'Cash', openingBalance: 0 }, { name: 'Bank', openingBalance: 0 }];
         let transactions = [];
         let loans = [];
         let incomePieChartInstance = null;
         let expensePieChartInstance = null;
 
-        // Initialize Dates
         document.getElementById('date').valueAsDate = new Date();
         document.getElementById('loan-date').valueAsDate = new Date();
         document.getElementById('bs-print-date').textContent = new Date().toLocaleDateString();
 
         function normalizePaymentModes(rawModes) {
             if (!rawModes || !Array.isArray(rawModes)) return [{ name: 'Cash', openingBalance: 0 }, { name: 'Bank', openingBalance: 0 }];
-            return rawModes.map(pm => {
-                if (typeof pm === 'string') {
-                    return { name: pm, openingBalance: 0 };
-                }
-                return { name: pm.name || 'Unnamed', openingBalance: Number(pm.openingBalance) || 0 };
-            });
+            return rawModes.map(pm => typeof pm === 'string' ? { name: pm, openingBalance: 0 } : { name: pm.name || 'Unnamed', openingBalance: Number(pm.openingBalance) || 0 });
         }
 
         async function loadUserDataFromFirebase() {
@@ -753,51 +600,32 @@
                     transactions = data.transactions || [];
                     loans = data.loans || [];
                 }
-            } catch (err) {
-                console.error('Failed to load from Firebase:', err);
-            }
+            } catch (err) { console.error('Load error:', err); }
         }
 
         async function saveDataToFirebase() {
             try {
-                await db.collection('app_data').doc(SHARED_DOC_ID).set({
-                    categories: categories,
-                    paymentModes: paymentModes,
-                    transactions: transactions,
-                    loans: loans
-                }, { merge: true });
-            } catch (err) {
-                console.error('Failed to sync to Firebase:', err);
-                alert('Failed to sync data to Firebase Cloud.');
-            }
+                await db.collection('app_data').doc(SHARED_DOC_ID).set({ categories, paymentModes, transactions, loans }, { merge: true });
+            } catch (err) { console.error('Sync error:', err); }
         }
 
         function switchSection(sectionId) {
-            document.querySelectorAll('.section-panel').forEach(panel => panel.classList.add('hidden'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-emerald-700', 'text-white', 'shadow-sm');
-                btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+            document.querySelectorAll('.section-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(b => {
+                b.classList.remove('bg-emerald-700', 'text-white', 'shadow-sm');
+                b.classList.add('text-slate-600', 'hover:bg-slate-100');
             });
-
             document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${sectionId}`);
             activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
             activeBtn.classList.add('bg-emerald-700', 'text-white', 'shadow-sm');
 
-            if (sectionId === 'reports') {
-                applyFilters();
-            } else if (sectionId === 'category-report') {
-                renderCategoryReport();
-            } else if (sectionId === 'history') {
-                applyHistoryFilters();
-            } else if (sectionId === 'balance-sheet') {
-                renderBalanceSheet();
-            } else if (sectionId === 'categories') {
-                renderCategoriesManager();
-                renderPaymentModesManager();
-            } else if (sectionId === 'dashboard') {
-                applyFilters();
-            }
+            if (sectionId === 'reports') applyFilters();
+            else if (sectionId === 'category-report') renderCategoryReport();
+            else if (sectionId === 'history') applyHistoryFilters();
+            else if (sectionId === 'balance-sheet') renderBalanceSheet();
+            else if (sectionId === 'categories') { renderCategoriesManager(); renderPaymentModesManager(); }
+            else if (sectionId === 'dashboard') applyFilters();
         }
 
         async function initApp() {
@@ -816,21 +644,17 @@
             const type = document.getElementById('type').value;
             const categorySelect = document.getElementById('category');
             categorySelect.innerHTML = '';
-
-            if (categories[type]) {
-                categories[type].forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    categorySelect.appendChild(option);
-                });
-            }
+            (categories[type] || []).forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
         }
 
         function updatePaymentModeOptions() {
             const pmSelect = document.getElementById('payment-mode');
             pmSelect.innerHTML = '';
-
             paymentModes.forEach(pm => {
                 const option = document.createElement('option');
                 option.value = pm.name;
@@ -841,7 +665,6 @@
 
         document.getElementById('transaction-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const editId = document.getElementById('edit-transaction-id').value;
             const type = document.getElementById('type').value;
             const category = document.getElementById('category').value;
@@ -853,56 +676,40 @@
 
             if (!amount || !date) return;
 
-            const processTransaction = async (receiptBase64 = null) => {
-                const transactionId = editId ? Number(editId) : Date.now();
-                
-                let finalReceipt = receiptBase64;
-                if (editId && !receiptBase64) {
-                    const existingTx = transactions.find(t => t.id === Number(editId));
-                    if (existingTx) finalReceipt = existingTx.receipt || null;
-                }
-
-                const updatedTransaction = {
-                    id: transactionId,
-                    type,
-                    category,
-                    paymentMode,
-                    amount,
-                    date,
-                    remark: remark || '-',
-                    receipt: finalReceipt
-                };
-
-                if (editId) {
-                    const index = transactions.findIndex(t => t.id === Number(editId));
-                    if (index !== -1) {
-                        transactions[index] = updatedTransaction;
-                    }
-                } else {
-                    transactions.push(updatedTransaction);
-                }
-
-                await saveAndRefresh();
-                resetTransactionForm();
-                alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded with receipt!');
-                switchSection('history');
-            };
+            let finalReceipt = null;
+            if (editId) {
+                const existing = transactions.find(t => t.id === Number(editId));
+                if (existing) finalReceipt = existing.receipt || null;
+            }
 
             if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(uploadEvent) {
-                    await processTransaction(uploadEvent.target.result);
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                await processTransaction();
+                const file = fileInput.files[0];
+                const storageRef = storage.ref(`receipts/${Date.now()}_${file.name}`);
+                const snapshot = await storageRef.put(file);
+                finalReceipt = await snapshot.ref.getDownloadURL();
             }
+
+            const transactionId = editId ? Number(editId) : Date.now();
+            const updatedTransaction = { id: transactionId, type, category, paymentMode, amount, date, remark: remark || '-', receipt: finalReceipt };
+
+            if (editId) {
+                const index = transactions.findIndex(t => t.id === Number(editId));
+                if (index !== -1) transactions[index] = updatedTransaction;
+            } else {
+                transactions.push(updatedTransaction);
+            }
+
+            await saveAndRefresh();
+            resetTransactionForm();
+            alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded and receipt uploaded to Cloud Storage!');
+            
+            // Stay on the add-transaction section instead of switching to history
+            switchSection('add-transaction');
         });
 
         function editTransaction(id) {
             const tx = transactions.find(t => t.id === id);
             if (!tx) return;
-
             document.getElementById('edit-transaction-id').value = tx.id;
             document.getElementById('type').value = tx.type;
             updateCategoryOptions();
@@ -912,11 +719,9 @@
             document.getElementById('amount').value = tx.amount;
             document.getElementById('date').value = tx.date;
             document.getElementById('remark').value = tx.remark === '-' ? '' : tx.remark;
-
             document.getElementById('form-title').textContent = 'Edit Transaction Record';
             document.getElementById('form-submit-btn').textContent = 'Update Transaction';
             document.getElementById('form-cancel-btn').classList.remove('hidden');
-
             switchSection('add-transaction');
         }
 
@@ -934,50 +739,21 @@
         function renderCategoriesManager() {
             const incomeList = document.getElementById('category-income-list');
             const expenseList = document.getElementById('category-expense-list');
-
-            incomeList.innerHTML = '';
-            expenseList.innerHTML = '';
+            incomeList.innerHTML = ''; expenseList.innerHTML = '';
 
             (categories.income || []).forEach(cat => {
-                incomeList.innerHTML += `
-                    <tr class="border-b border-slate-200 hover:bg-slate-100">
-                        <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
-                        <td class="py-2.5 px-3 text-right space-x-2">
-                            <button onclick="openEditCategoryModal('income', '${cat}')" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
-                            <button onclick="deleteCategory('income', '${cat}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
-                        </td>
-                    </tr>
-                `;
+                incomeList.innerHTML += `<tr class="border-b border-slate-200 hover:bg-slate-100"><td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td><td class="py-2.5 px-3 text-right space-x-2"><button onclick="openEditCategoryModal('income', '${cat}')" class="text-emerald-700 font-semibold text-xs">Edit</button><button onclick="deleteCategory('income', '${cat}')" class="text-rose-700 font-semibold text-xs">Delete</button></td></tr>`;
             });
-
             (categories.expense || []).forEach(cat => {
-                expenseList.innerHTML += `
-                    <tr class="border-b border-slate-200 hover:bg-slate-100">
-                        <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
-                        <td class="py-2.5 px-3 text-right space-x-2">
-                            <button onclick="openEditCategoryModal('expense', '${cat}')" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
-                            <button onclick="deleteCategory('expense', '${cat}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
-                        </td>
-                    </tr>
-                `;
+                expenseList.innerHTML += `<tr class="border-b border-slate-200 hover:bg-slate-100"><td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td><td class="py-2.5 px-3 text-right space-x-2"><button onclick="openEditCategoryModal('expense', '${cat}')" class="text-emerald-700 font-semibold text-xs">Edit</button><button onclick="deleteCategory('expense', '${cat}')" class="text-rose-700 font-semibold text-xs">Delete</button></td></tr>`;
             });
         }
 
         function renderPaymentModesManager() {
             const pmList = document.getElementById('payment-modes-list');
             pmList.innerHTML = '';
-
             paymentModes.forEach(pm => {
-                pmList.innerHTML += `
-                    <tr class="border-b border-slate-200 hover:bg-slate-100">
-                        <td class="py-2.5 px-3 font-medium text-slate-800">${pm.name}</td>
-                        <td class="py-2.5 px-3 text-slate-600 text-xs">Opening: ₹${(pm.openingBalance || 0).toFixed(2)}</td>
-                        <td class="py-2.5 px-3 text-right space-x-2">
-                            <button onclick="openEditPaymentModeModal('${pm.name}', ${pm.openingBalance || 0})" class="text-emerald-700 hover:text-emerald-900 font-semibold text-xs">Edit</button>
-                            <button onclick="deletePaymentMode('${pm.name}')" class="text-rose-700 hover:text-rose-900 font-semibold text-xs">Delete</button>
-                        </td>
-                    </tr>
-                `;
+                pmList.innerHTML += `<tr class="border-b border-slate-200 hover:bg-slate-100"><td class="py-2.5 px-3 font-medium text-slate-800">${pm.name}</td><td class="py-2.5 px-3 text-slate-600 text-xs">Opening: ₹${(pm.openingBalance || 0).toFixed(2)}</td><td class="py-2.5 px-3 text-right space-x-2"><button onclick="openEditPaymentModeModal('${pm.name}', ${pm.openingBalance || 0})" class="text-emerald-700 font-semibold text-xs">Edit</button><button onclick="deletePaymentMode('${pm.name}')" class="text-rose-700 font-semibold text-xs">Delete</button></td></tr>`;
             });
         }
 
@@ -985,19 +761,12 @@
             e.preventDefault();
             const name = document.getElementById('new-pm-name').value.trim();
             const openingBalance = parseFloat(document.getElementById('new-pm-opening').value) || 0;
-
-            const exists = paymentModes.some(p => p.name.toLowerCase() === name.toLowerCase());
-
-            if (name && !exists) {
+            if (name && !paymentModes.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                 paymentModes.push({ name, openingBalance });
                 await saveDataToFirebase();
                 updatePaymentModeOptions();
                 renderPaymentModesManager();
-                alert(`Payment mode "${name}" added successfully!`);
                 this.reset();
-                document.getElementById('new-pm-opening').value = '0';
-            } else {
-                alert('Payment mode already exists or invalid name.');
             }
         });
 
@@ -1007,67 +776,28 @@
             document.getElementById('edit-pm-opening').value = openingBalance;
             document.getElementById('edit-pm-modal').classList.remove('hidden');
         }
-
-        function closeEditPaymentModeModal() {
-            document.getElementById('edit-pm-modal').classList.add('hidden');
-        }
+        function closeEditPaymentModeModal() { document.getElementById('edit-pm-modal').classList.add('hidden'); }
 
         document.getElementById('edit-pm-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const oldName = document.getElementById('edit-pm-old-name').value;
             const newName = document.getElementById('edit-pm-new-name').value.trim();
             const newOpening = parseFloat(document.getElementById('edit-pm-opening').value) || 0;
-
-            if (!newName) {
-                closeEditPaymentModeModal();
-                return;
-            }
-
-            if (newName.toLowerCase() !== oldName.toLowerCase()) {
-                const exists = paymentModes.some(p => p.name.toLowerCase() === newName.toLowerCase());
-                if (exists) {
-                    alert('A payment mode with this name already exists.');
-                    return;
-                }
-            }
-
             const pmObj = paymentModes.find(p => p.name === oldName);
-            if (pmObj) {
-                pmObj.name = newName;
-                pmObj.openingBalance = newOpening;
-            }
-
-            if (newName !== oldName) {
-                transactions.forEach(t => {
-                    if (t.paymentMode === oldName) {
-                        t.paymentMode = newName;
-                    }
-                });
-            }
-
+            if (pmObj) { pmObj.name = newName; pmObj.openingBalance = newOpening; }
+            transactions.forEach(t => { if (t.paymentMode === oldName) t.paymentMode = newName; });
             await saveAndRefresh();
             closeEditPaymentModeModal();
             renderPaymentModesManager();
-            alert(`Payment mode updated successfully!`);
         });
 
         async function deletePaymentMode(pmName) {
-            if (paymentModes.length <= 1) {
-                alert('You must keep at least one payment mode.');
-                return;
-            }
-            if (confirm(`Are you sure you want to delete payment mode "${pmName}"? Transactions associated with this mode will be reassigned to "${paymentModes[0].name}".`)) {
+            if (paymentModes.length <= 1) return alert('Keep at least one payment mode.');
+            if (confirm(`Delete mode "${pmName}"?`)) {
                 paymentModes = paymentModes.filter(p => p.name !== pmName);
-                
-                transactions.forEach(t => {
-                    if (t.paymentMode === pmName) {
-                        t.paymentMode = paymentModes[0].name;
-                    }
-                });
-
+                transactions.forEach(t => { if (t.paymentMode === pmName) t.paymentMode = paymentModes[0].name; });
                 await saveAndRefresh();
                 renderPaymentModesManager();
-                alert(`Payment mode "${pmName}" deleted successfully.`);
             }
         }
 
@@ -1077,73 +807,32 @@
             document.getElementById('edit-cat-new-name').value = catName;
             document.getElementById('edit-category-modal').classList.remove('hidden');
         }
-
-        function closeEditCategoryModal() {
-            document.getElementById('edit-category-modal').classList.add('hidden');
-        }
+        function closeEditCategoryModal() { document.getElementById('edit-category-modal').classList.add('hidden'); }
 
         document.getElementById('edit-category-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const type = document.getElementById('edit-cat-type-val').value;
             const oldName = document.getElementById('edit-cat-old-name').value;
             const newName = document.getElementById('edit-cat-new-name').value.trim();
-
-            if (!newName || newName === oldName) {
-                closeEditCategoryModal();
-                return;
-            }
-
-            if (categories[type].includes(newName)) {
-                alert('A category with this name already exists.');
-                return;
-            }
-
-            const index = categories[type].indexOf(oldName);
-            if (index !== -1) {
-                categories[type][index] = newName;
-            }
-
-            transactions.forEach(t => {
-                if (t.type === type && t.category === oldName) {
-                    t.category = newName;
-                }
-            });
-
+            const idx = categories[type].indexOf(oldName);
+            if (idx !== -1) categories[type][idx] = newName;
+            transactions.forEach(t => { if (t.type === type && t.category === oldName) t.category = newName; });
             await saveAndRefresh();
             closeEditCategoryModal();
             renderCategoriesManager();
-            alert(`Category renamed from "${oldName}" to "${newName}" successfully!`);
         });
 
         async function deleteCategory(type, catName) {
-            if (confirm(`Are you sure you want to delete category "${catName}"?`)) {
+            if (confirm(`Delete category "${catName}"?`)) {
                 categories[type] = categories[type].filter(c => c !== catName);
                 await saveAndRefresh();
                 renderCategoriesManager();
-                alert(`Category "${catName}" deleted successfully.`);
             }
         }
 
-        function printHistory() {
-            document.body.classList.add('printing-history');
-            document.body.classList.remove('printing-category', 'printing-balance');
-            window.print();
-            document.body.classList.remove('printing-history');
-        }
-
-        function printCategoryReport() {
-            document.body.classList.add('printing-category');
-            document.body.classList.remove('printing-history', 'printing-balance');
-            window.print();
-            document.body.classList.remove('printing-category');
-        }
-
-        function printBalanceSheet() {
-            document.body.classList.add('printing-balance');
-            document.body.classList.remove('printing-history', 'printing-category');
-            window.print();
-            document.body.classList.remove('printing-balance');
-        }
+        function printHistory() { document.body.classList.add('printing-history'); window.print(); document.body.classList.remove('printing-history'); }
+        function printCategoryReport() { document.body.classList.add('printing-category'); window.print(); document.body.classList.remove('printing-category'); }
+        function printBalanceSheet() { document.body.classList.add('printing-balance'); window.print(); document.body.classList.remove('printing-balance'); }
 
         document.getElementById('loan-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -1151,102 +840,57 @@
             const name = document.getElementById('loan-name').value.trim();
             const amount = parseFloat(document.getElementById('loan-amount').value);
             const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
-
             if (!name || isNaN(amount) || !date) return;
-
-            const newLoan = {
-                id: Date.now(),
-                date,
-                name,
-                amount,
-                rate,
-                history: []
-            };
-
-            loans.push(newLoan);
+            loans.push({ id: Date.now(), date, name, amount, rate, history: [] });
             await saveDataToFirebase();
             renderBalanceSheet();
             this.reset();
             document.getElementById('loan-date').valueAsDate = new Date();
-            alert('Loan liability saved to cloud!');
         });
 
         function openPayLoanModal(id) {
             const loan = loans.find(l => l.id === id);
             if (!loan) return;
             document.getElementById('pay-loan-id').value = id;
-            document.getElementById('pay-loan-title').textContent = `Pay Loan: ${loan.name} (Balance: ₹${loan.amount.toFixed(2)})`;
+            document.getElementById('pay-loan-title').textContent = `Pay Loan: ${loan.name} (Bal: ₹${loan.amount.toFixed(2)})`;
             document.getElementById('pay-loan-amount').value = '';
             document.getElementById('pay-loan-date').valueAsDate = new Date();
             document.getElementById('pay-loan-modal').classList.remove('hidden');
         }
-
-        function closePayLoanModal() {
-            document.getElementById('pay-loan-modal').classList.add('hidden');
-        }
+        function closePayLoanModal() { document.getElementById('pay-loan-modal').classList.add('hidden'); }
 
         document.getElementById('pay-loan-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const id = Number(document.getElementById('pay-loan-id').value);
             const payAmount = parseFloat(document.getElementById('pay-loan-amount').value);
             const payDate = document.getElementById('pay-loan-date').value;
-
-            if (isNaN(payAmount) || payAmount <= 0) {
-                alert('Please enter a valid positive repayment amount.');
-                return;
-            }
-
             const loan = loans.find(l => l.id === id);
-            if (!loan) return;
-
-            if (payAmount > loan.amount) {
-                if (!confirm(`Repayment amount exceeds outstanding principal. Settle loan balance to ₹0.00?`)) {
-                    return;
-                }
-                loan.amount = 0;
-            } else {
-                loan.amount -= payAmount;
-            }
-
+            if (!loan || isNaN(payAmount) || payAmount <= 0) return;
+            loan.amount = Math.max(0, loan.amount - payAmount);
             if (!loan.history) loan.history = [];
             loan.history.push({ date: payDate, amount: payAmount });
-
             await saveDataToFirebase();
             renderBalanceSheet();
             closePayLoanModal();
-            alert(`Repayment of ₹${payAmount.toFixed(2)} applied.`);
         });
 
         function viewLoanHistory(id) {
             const loan = loans.find(l => l.id === id);
             if (!loan) return;
-            document.getElementById('loan-history-title').textContent = `${loan.name} - Repayment History`;
-            
+            document.getElementById('loan-history-title').textContent = `${loan.name} - Repayments`;
             const tbody = document.getElementById('loan-history-body');
             tbody.innerHTML = '';
-            
             if (!loan.history || loan.history.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-slate-400 italic">No repayments recorded yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" class="py-4 text-center text-slate-400">No repayments.</td></tr>';
             } else {
-                const sortedHistory = [...loan.history].sort((a, b) => new Date(b.date) - new Date(a.date));
-                sortedHistory.forEach(h => {
-                    tbody.innerHTML += `
-                        <tr class="border-b border-slate-200 hover:bg-slate-100">
-                            <td class="py-2.5 px-3 text-slate-700">${h.date}</td>
-                            <td class="py-2.5 px-3 font-semibold text-emerald-700">₹${h.amount.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
+                loan.history.forEach(h => { tbody.innerHTML += `<tr class="border-b border-slate-200"><td class="py-2.5 px-3">${h.date}</td><td class="py-2.5 px-3 font-semibold text-emerald-700">₹${h.amount.toFixed(2)}</td></tr>`; });
             }
             document.getElementById('loan-history-modal').classList.remove('hidden');
         }
-
-        function closeLoanHistoryModal() {
-            document.getElementById('loan-history-modal').classList.add('hidden');
-        }
+        function closeLoanHistoryModal() { document.getElementById('loan-history-modal').classList.add('hidden'); }
 
         async function deleteLoan(id) {
-            if (confirm("Are you sure you want to delete this loan record?")) {
+            if (confirm("Delete loan?")) {
                 loans = loans.filter(l => l.id !== id);
                 await saveDataToFirebase();
                 renderBalanceSheet();
@@ -1257,21 +901,17 @@
             e.preventDefault();
             const type = document.getElementById('new-cat-type').value;
             const name = document.getElementById('new-cat-name').value.trim();
-
             if (name && !categories[type].includes(name)) {
                 categories[type].push(name);
                 await saveDataToFirebase();
                 updateCategoryOptions();
                 renderCategoriesManager();
-                alert(`Category "${name}" defined successfully!`);
                 this.reset();
-            } else {
-                alert('Category already exists or invalid name.');
             }
         });
 
         async function deleteTransaction(id) {
-            if (confirm("Are you sure you want to delete this transaction?")) {
+            if (confirm("Delete transaction?")) {
                 transactions = transactions.filter(t => t.id !== id);
                 await saveAndRefresh();
             }
@@ -1288,25 +928,11 @@
         function getFilteredTransactions() {
             const startDate = document.getElementById('filter-start').value;
             const endDate = document.getElementById('filter-end').value;
-
-            return transactions.filter(t => {
-                if (startDate && t.date < startDate) return false;
-                if (endDate && t.date > endDate) return false;
-                return true;
-            });
+            return transactions.filter(t => (!startDate || t.date >= startDate) && (!endDate || t.date <= endDate));
         }
 
-        function resetFilters() {
-            document.getElementById('filter-start').value = '';
-            document.getElementById('filter-end').value = '';
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const filtered = getFilteredTransactions();
-            updateMetrics(filtered);
-            renderCharts(filtered);
-        }
+        function resetFilters() { document.getElementById('filter-start').value = ''; document.getElementById('filter-end').value = ''; applyFilters(); }
+        function applyFilters() { updateMetrics(getFilteredTransactions()); renderCharts(getFilteredTransactions()); }
 
         function resetCategoryReportFilters() {
             document.getElementById('cat-rep-start').value = '';
@@ -1319,49 +945,16 @@
             const startDate = document.getElementById('cat-rep-start').value;
             const endDate = document.getElementById('cat-rep-end').value;
             const recordType = document.getElementById('cat-rep-type').value;
+            document.getElementById('print-cat-range-label').textContent = `${startDate || 'Beginning'} to ${endDate || 'Present'}`;
 
-            const startLabel = startDate || 'Beginning';
-            const endLabel = endDate || 'Present';
-            document.getElementById('print-cat-range-label').textContent = `${startLabel} to ${endLabel}`;
-
-            const filtered = transactions.filter(t => {
-                if (startDate && t.date < startDate) return false;
-                if (endDate && t.date > endDate) return false;
-                return true;
-            });
-
-            const incomeContainer = document.getElementById('cat-income-container');
-            const expenseContainer = document.getElementById('cat-expense-container');
-
-            if (recordType === 'income') {
-                incomeContainer.style.display = 'block';
-                expenseContainer.style.display = 'none';
-            } else if (recordType === 'expense') {
-                incomeContainer.style.display = 'none';
-                expenseContainer.style.display = 'block';
-            } else {
-                incomeContainer.style.display = 'block';
-                expenseContainer.style.display = 'block';
-            }
-
-            const incomeMap = {};
-            (categories.income || []).forEach(cat => incomeMap[cat] = 0);
-            let totalIncomeSum = 0;
-
-            const expenseMap = {};
-            (categories.expense || []).forEach(cat => expenseMap[cat] = 0);
-            let totalExpenseSum = 0;
+            const filtered = transactions.filter(t => (!startDate || t.date >= startDate) && (!endDate || t.date <= endDate));
+            const incomeMap = {}; (categories.income || []).forEach(cat => incomeMap[cat] = 0);
+            const expenseMap = {}; (categories.expense || []).forEach(cat => expenseMap[cat] = 0);
+            let totalIncomeSum = 0, totalExpenseSum = 0;
 
             filtered.forEach(t => {
-                if (t.type === 'income') {
-                    if (incomeMap[t.category] === undefined) incomeMap[t.category] = 0;
-                    incomeMap[t.category] += t.amount;
-                    totalIncomeSum += t.amount;
-                } else if (t.type === 'expense') {
-                    if (expenseMap[t.category] === undefined) expenseMap[t.category] = 0;
-                    expenseMap[t.category] += t.amount;
-                    totalExpenseSum += t.amount;
-                }
+                if (t.type === 'income') { incomeMap[t.category] = (incomeMap[t.category] || 0) + t.amount; totalIncomeSum += t.amount; }
+                else if (t.type === 'expense') { expenseMap[t.category] = (expenseMap[t.category] || 0) + t.amount; totalExpenseSum += t.amount; }
             });
 
             document.getElementById('cat-total-income-sum').textContent = `₹${totalIncomeSum.toFixed(2)}`;
@@ -1369,58 +962,25 @@
 
             const incomeTbody = document.getElementById('cat-income-table-body');
             incomeTbody.innerHTML = '';
-            const sortedIncomes = Object.entries(incomeMap).sort((a, b) => b[1] - a[1]);
-            if (sortedIncomes.length === 0 || sortedIncomes.every(([k, v]) => v === 0)) {
-                incomeTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-slate-400 italic">No income records found for this range.</td></tr>`;
-            } else {
-                sortedIncomes.forEach(([cat, amt]) => {
-                    incomeTbody.innerHTML += `
-                        <tr class="border-b border-slate-100 hover:bg-slate-50">
-                            <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
-                            <td class="py-2.5 px-3 text-right font-semibold text-emerald-700">₹${amt.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            }
+            Object.entries(incomeMap).forEach(([cat, amt]) => {
+                incomeTbody.innerHTML += `<tr class="border-b border-slate-100"><td class="py-2.5 px-3 font-medium">${cat}</td><td class="py-2.5 px-3 text-right font-semibold text-emerald-700">₹${amt.toFixed(2)}</td></tr>`;
+            });
 
             const expenseTbody = document.getElementById('cat-expense-table-body');
             expenseTbody.innerHTML = '';
-            const sortedExpenses = Object.entries(expenseMap).sort((a, b) => b[1] - a[1]);
-            if (sortedExpenses.length === 0 || sortedExpenses.every(([k, v]) => v === 0)) {
-                expenseTbody.innerHTML = `<tr><td colspan="2" class="py-3 text-center text-slate-400 italic">No expense records found for this range.</td></tr>`;
-            } else {
-                sortedExpenses.forEach(([cat, amt]) => {
-                    expenseTbody.innerHTML += `
-                        <tr class="border-b border-slate-100 hover:bg-slate-50">
-                            <td class="py-2.5 px-3 font-medium text-slate-800">${cat}</td>
-                            <td class="py-2.5 px-3 text-right font-semibold text-rose-700">₹${amt.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-            }
+            Object.entries(expenseMap).forEach(([cat, amt]) => {
+                expenseTbody.innerHTML += `<tr class="border-b border-slate-100"><td class="py-2.5 px-3 font-medium">${cat}</td><td class="py-2.5 px-3 text-right font-semibold text-rose-700">₹${amt.toFixed(2)}</td></tr>`;
+            });
         }
 
         function getFilteredHistoryTransactions() {
             const startDate = document.getElementById('hist-filter-start').value;
             const endDate = document.getElementById('hist-filter-end').value;
             const searchQuery = document.getElementById('hist-search-box').value.toLowerCase().trim();
-
             return transactions.filter(t => {
                 if (startDate && t.date < startDate) return false;
                 if (endDate && t.date > endDate) return false;
-                
-                if (searchQuery) {
-                    const matchCategory = t.category.toLowerCase().includes(searchQuery);
-                    const matchRemark = t.remark.toLowerCase().includes(searchQuery);
-                    const matchAmount = t.amount.toString().includes(searchQuery);
-                    const matchType = t.type.toLowerCase().includes(searchQuery);
-                    const matchMode = (t.paymentMode || '').toLowerCase().includes(searchQuery);
-                    const matchDate = t.date.includes(searchQuery);
-
-                    if (!matchCategory && !matchRemark && !matchAmount && !matchType && !matchMode && !matchDate) {
-                        return false;
-                    }
-                }
+                if (searchQuery && !t.category.toLowerCase().includes(searchQuery) && !t.remark.toLowerCase().includes(searchQuery) && !t.amount.toString().includes(searchQuery)) return false;
                 return true;
             });
         }
@@ -1435,393 +995,117 @@
         function applyHistoryFilters() {
             const filtered = getFilteredHistoryTransactions();
             const startDate = document.getElementById('hist-filter-start').value;
-            
-            const startStr = startDate || 'Beginning';
-            const endStr = document.getElementById('hist-filter-end').value || 'Present';
-            document.getElementById('print-range-label').textContent = `${startStr} to ${endStr}`;
+            document.getElementById('print-range-label').textContent = `${startDate || 'Beginning'} to ${document.getElementById('hist-filter-end').value || 'Present'}`;
 
             let rangeIncome = 0, rangeExpense = 0;
-            filtered.forEach(t => {
-                if (t.type === 'income') rangeIncome += t.amount;
-                else rangeExpense += t.amount;
-            });
-            const rangeNet = rangeIncome - rangeExpense;
-            document.getElementById('print-range-net').textContent = `₹${rangeNet.toFixed(2)}`;
+            filtered.forEach(t => { if (t.type === 'income') rangeIncome += t.amount; else rangeExpense += t.amount; });
+            document.getElementById('print-range-net').textContent = `₹${(rangeIncome - rangeExpense).toFixed(2)}`;
 
-            // Calculate Opening, Income, Expenses, and Closing Balance for the filtered range
-            let totalInitialOpening = 0;
-            paymentModes.forEach(pm => {
-                totalInitialOpening += (pm.openingBalance || 0);
-            });
-
-            let priorIncome = 0;
-            let priorExpense = 0;
+            let totalInitialOpening = paymentModes.reduce((sum, pm) => sum + (pm.openingBalance || 0), 0);
+            let priorIncome = 0, priorExpense = 0;
             if (startDate) {
                 transactions.forEach(t => {
-                    if (t.date < startDate) {
-                        if (t.type === 'income') priorIncome += t.amount;
-                        else priorExpense += t.amount;
-                    }
+                    if (t.date < startDate) { if (t.type === 'income') priorIncome += t.amount; else priorExpense += t.amount; }
                 });
             }
-
             const openingBalanceForRange = totalInitialOpening + priorIncome - priorExpense;
-            const closingBalanceForRange = openingBalanceForRange + rangeIncome - rangeExpense;
-
             document.getElementById('hist-sum-opening').textContent = `₹${openingBalanceForRange.toFixed(2)}`;
             document.getElementById('hist-sum-income').textContent = `₹${rangeIncome.toFixed(2)}`;
             document.getElementById('hist-sum-expense').textContent = `₹${rangeExpense.toFixed(2)}`;
-            document.getElementById('hist-sum-closing').textContent = `₹${closingBalanceForRange.toFixed(2)}`;
+            document.getElementById('hist-sum-closing').textContent = `₹${(openingBalanceForRange + rangeIncome - rangeExpense).toFixed(2)}`;
 
             renderTransactionsList(filtered);
         }
 
         function updateMetrics(filteredTransactions) {
-            let pmInc = {};
-            let pmExp = {};
-            paymentModes.forEach(pm => {
-                pmInc[pm.name] = 0;
-                pmExp[pm.name] = 0;
-            });
-
+            let pmInc = {}, pmExp = {};
+            paymentModes.forEach(pm => { pmInc[pm.name] = 0; pmExp[pm.name] = 0; });
             transactions.forEach(t => {
                 const mode = t.paymentMode || paymentModes[0].name;
-                if (pmInc[mode] === undefined) { pmInc[mode] = 0; pmExp[mode] = 0; }
-                if (t.type === 'income') {
-                    pmInc[mode] += t.amount;
-                } else {
-                    pmExp[mode] += t.amount;
+                if (pmInc[mode] !== undefined) {
+                    if (t.type === 'income') pmInc[mode] += t.amount; else pmExp[mode] += t.amount;
                 }
             });
 
             let totalNetBalance = 0;
             const pmContainer = document.getElementById('dash-payment-modes-container');
             pmContainer.innerHTML = '';
-
             paymentModes.forEach(pm => {
-                const opening = pm.openingBalance || 0;
-                const inc = pmInc[pm.name] || 0;
-                const exp = pmExp[pm.name] || 0;
-                const bal = opening + inc - exp;
+                const bal = (pm.openingBalance || 0) + (pmInc[pm.name] || 0) - (pmExp[pm.name] || 0);
                 totalNetBalance += bal;
-
-                pmContainer.innerHTML += `
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <span class="text-xs font-bold tracking-wider text-emerald-800 uppercase">${pm.name} Ledger Balance</span>
-                            <p class="text-3xl font-extrabold text-slate-900 mt-2">₹${bal.toFixed(2)}</p>
-                        </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-500 space-y-1">
-                            <div>Opening: <strong>₹${opening.toFixed(2)}</strong></div>
-                            <div class="flex justify-between">
-                                <span>In: <strong class="text-emerald-700">₹${inc.toFixed(2)}</strong></span>
-                                <span>Out: <strong class="text-rose-700">₹${exp.toFixed(2)}</strong></span>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                pmContainer.innerHTML += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"><span class="text-xs font-bold text-emerald-800 uppercase">${pm.name}</span><p class="text-3xl font-extrabold text-slate-900 mt-2">₹${bal.toFixed(2)}</p></div>`;
             });
-
             document.getElementById('net-balance').textContent = `₹${totalNetBalance.toFixed(2)}`;
-
-            let allTotalInc = 0, allTotalExp = 0;
-            const allIncEl = document.getElementById('dash-all-income-modes');
-            const allExpEl = document.getElementById('dash-all-expense-modes');
-            allIncEl.innerHTML = '';
-            allExpEl.innerHTML = '';
-
-            paymentModes.forEach(pm => {
-                const inc = pmInc[pm.name] || 0;
-                const exp = pmExp[pm.name] || 0;
-                allTotalInc += inc;
-                allTotalExp += exp;
-
-                allIncEl.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
-                        <span class="text-slate-700">${pm.name}:</span>
-                        <span class="font-bold text-emerald-700">₹${inc.toFixed(2)}</span>
-                    </div>
-                `;
-                allExpEl.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
-                        <span class="text-slate-700">${pm.name}:</span>
-                        <span class="font-bold text-rose-700">₹${exp.toFixed(2)}</span>
-                    </div>
-                `;
-            });
-
-            document.getElementById('dash-all-total-inc').textContent = `₹${allTotalInc.toFixed(2)}`;
-            document.getElementById('dash-all-total-exp').textContent = `₹${allTotalExp.toFixed(2)}`;
-
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth();
-            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            document.getElementById('current-month-label').textContent = `${monthNames[currentMonth]} ${currentYear}`;
-
-            let monthPmInc = {};
-            let monthPmExp = {};
-            paymentModes.forEach(pm => {
-                monthPmInc[pm.name] = 0;
-                monthPmExp[pm.name] = 0;
-            });
-
-            transactions.forEach(t => {
-                const tDate = new Date(t.date);
-                if (tDate.getFullYear() === currentYear && tDate.getMonth() === currentMonth) {
-                    const mode = t.paymentMode || paymentModes[0].name;
-                    if (monthPmInc[mode] === undefined) { monthPmInc[mode] = 0; monthPmExp[mode] = 0; }
-                    if (t.type === 'income') {
-                        monthPmInc[mode] += t.amount;
-                    } else {
-                        monthPmExp[mode] += t.amount;
-                    }
-                }
-            });
-
-            let monthTotalInc = 0, monthTotalExp = 0;
-            const monthIncEl = document.getElementById('dash-month-income-modes');
-            const monthExpEl = document.getElementById('dash-month-expense-modes');
-            monthIncEl.innerHTML = '';
-            monthExpEl.innerHTML = '';
-
-            paymentModes.forEach(pm => {
-                const inc = monthPmInc[pm.name] || 0;
-                const exp = monthPmExp[pm.name] || 0;
-                monthTotalInc += inc;
-                monthTotalExp += exp;
-
-                monthIncEl.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
-                        <span class="text-slate-700">${pm.name}:</span>
-                        <span class="font-bold text-emerald-700">₹${inc.toFixed(2)}</span>
-                    </div>
-                `;
-                monthExpEl.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 text-sm">
-                        <span class="text-slate-700">${pm.name}:</span>
-                        <span class="font-bold text-rose-700">₹${exp.toFixed(2)}</span>
-                    </div>
-                `;
-            });
-
-            document.getElementById('dash-month-total-inc').textContent = `₹${monthTotalInc.toFixed(2)}`;
-            document.getElementById('dash-month-total-exp').textContent = `₹${monthTotalExp.toFixed(2)}`;
         }
 
         function renderTransactionsList(filteredTransactions) {
             const tbody = document.getElementById('transaction-table-body');
             tbody.innerHTML = '';
-
             const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            if (sorted.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-slate-400">No transactions recorded for this range/search.</td></tr>`;
-                return;
-            }
-
+            if (sorted.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-slate-400">No records found.</td></tr>`; return; }
             sorted.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-slate-100 hover:bg-slate-50";
-
-                const receiptHtml = t.receipt 
-                    ? `<a href="${t.receipt}" target="_blank" class="text-emerald-700 hover:text-emerald-900 underline font-semibold">View</a>` 
-                    : '-';
-
-                tr.innerHTML = `
-                    <td class="py-3 px-3">${t.date}</td>
-                    <td class="py-3 px-3 uppercase font-semibold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">${t.type}</td>
-                    <td class="py-3 px-3 text-slate-800">${t.category}</td>
-                    <td class="py-3 px-3"><span class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 text-slate-700 border border-slate-200">${t.paymentMode || paymentModes[0].name}</span></td>
-                    <td class="py-3 px-3 font-bold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">
-                        ${t.type === 'income' ? '+' : '-'}₹${t.amount.toFixed(2)}
-                    </td>
-                    <td class="py-3 px-3 text-slate-500 italic">${t.remark || '-'}</td>
-                    <td class="py-3 px-3">${receiptHtml}</td>
-                    <td class="py-3 px-3 text-center no-print space-x-2">
-                        <button onclick="editTransaction(${t.id})" class="text-emerald-700 hover:text-emerald-900 font-semibold">Edit</button>
-                        <button onclick="deleteTransaction(${t.id})" class="text-rose-700 hover:text-rose-900 font-semibold">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                const receiptHtml = t.receipt ? `<a href="${t.receipt}" target="_blank" class="text-emerald-700 underline font-semibold">View</a>` : '-';
+                tbody.innerHTML += `<tr class="border-b border-slate-100 hover:bg-slate-50"><td class="py-3 px-3">${t.date}</td><td class="py-3 px-3 uppercase font-semibold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">${t.type}</td><td class="py-3 px-3">${t.category}</td><td class="py-3 px-3">${t.paymentMode || 'Cash'}</td><td class="py-3 px-3 font-bold ${t.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}">₹${t.amount.toFixed(2)}</td><td class="py-3 px-3">${t.remark}</td><td class="py-3 px-3">${receiptHtml}</td><td class="py-3 px-3 text-center no-print space-x-2"><button onclick="editTransaction(${t.id})" class="text-emerald-700 font-semibold">Edit</button><button onclick="deleteTransaction(${t.id})" class="text-rose-700 font-semibold">Delete</button></td></tr>`;
             });
         }
 
         function renderBalanceSheet() {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalOpening = 0;
-
-            paymentModes.forEach(pm => {
-                totalOpening += (pm.openingBalance || 0);
-            });
-
-            transactions.forEach(t => {
-                if (t.type === 'income') totalIncome += t.amount;
-                else totalExpense += t.amount;
-            });
+            let totalIncome = 0, totalExpense = 0, totalOpening = paymentModes.reduce((s, pm) => s + (pm.openingBalance || 0), 0);
+            transactions.forEach(t => { if (t.type === 'income') totalIncome += t.amount; else totalExpense += t.amount; });
             const netCash = totalOpening + totalIncome - totalExpense;
 
             document.getElementById('bs-total-income').textContent = `₹${totalIncome.toFixed(2)}`;
             document.getElementById('bs-total-expense').textContent = `₹${totalExpense.toFixed(2)}`;
             document.getElementById('bs-net-surplus').textContent = `₹${(totalIncome - totalExpense).toFixed(2)}`;
-
             document.getElementById('bs-asset-cash').textContent = `₹${netCash.toFixed(2)}`;
-            document.getElementById('bs-asset-income').textContent = `₹${(totalOpening + totalIncome).toFixed(2)}`;
             document.getElementById('bs-total-assets').textContent = `₹${netCash.toFixed(2)}`;
 
             const loanTbody = document.getElementById('loan-table-body');
             loanTbody.innerHTML = '';
-
             let totalLiabilities = 0;
-            if (loans.length === 0) {
-                loanTbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-slate-400 italic">No loan liabilities recorded</td></tr>`;
-            } else {
-                loans.forEach(l => {
-                    totalLiabilities += l.amount;
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-slate-200 hover:bg-slate-50";
-                    tr.innerHTML = `
-                        <td class="py-2.5 text-slate-500">${l.date || '-'}</td>
-                        <td class="py-2.5 font-medium text-slate-800">${l.name}</td>
-                        <td class="py-2.5 text-slate-600">${l.rate}%</td>
-                        <td class="py-2.5 font-semibold text-rose-700">₹${l.amount.toFixed(2)}</td>
-                        <td class="py-2.5 text-center no-print space-x-2">
-                            <button onclick="openPayLoanModal(${l.id})" class="text-emerald-700 hover:text-emerald-900 font-semibold">Pay</button>
-                            <button onclick="viewLoanHistory(${l.id})" class="text-teal-700 hover:text-teal-900 font-semibold">History</button>
-                            <button onclick="deleteLoan(${l.id})" class="text-rose-700 hover:text-rose-900 font-semibold">Delete</button>
-                        </td>
-                    `;
-                    loanTbody.appendChild(tr);
-                });
-            }
-
+            loans.forEach(l => {
+                totalLiabilities += l.amount;
+                loanTbody.innerHTML += `<tr class="border-b border-slate-200"><td class="py-2.5">${l.date}</td><td class="py-2.5">${l.name}</td><td class="py-2.5">${l.rate}%</td><td class="py-2.5 text-rose-700">₹${l.amount.toFixed(2)}</td><td class="py-2.5 text-center no-print space-x-2"><button onclick="openPayLoanModal(${l.id})" class="text-emerald-700 font-semibold">Pay</button><button onclick="viewLoanHistory(${l.id})" class="text-teal-700 font-semibold">History</button><button onclick="deleteLoan(${l.id})" class="text-rose-700 font-semibold">Delete</button></td></tr>`;
+            });
             document.getElementById('bs-total-liabilities').textContent = `₹${totalLiabilities.toFixed(2)}`;
-
-            const netWorth = netCash - totalLiabilities;
-            const netWorthEl = document.getElementById('bs-net-worth');
-            netWorthEl.textContent = `₹${netWorth.toFixed(2)}`;
-            if (netWorth < 0) {
-                netWorthEl.className = "text-2xl font-extrabold text-rose-300";
-            } else {
-                netWorthEl.className = "text-2xl font-extrabold text-emerald-300";
-            }
+            document.getElementById('bs-net-worth').textContent = `₹${(netCash - totalLiabilities).toFixed(2)}`;
         }
 
         function renderCharts(filteredTransactions) {
-            const incomeCategories = categories.income || [];
-            const incomeDataMap = {};
-            incomeCategories.forEach(cat => incomeDataMap[cat] = 0);
-
-            filteredTransactions.filter(t => t.type === 'income').forEach(t => {
-                if (incomeDataMap[t.category] !== undefined) incomeDataMap[t.category] += t.amount;
-            });
-
-            const incomeCtx = document.getElementById('incomePieChart').getContext('2d');
+            const incomeDataMap = {}; (categories.income || []).forEach(cat => incomeDataMap[cat] = 0);
+            filteredTransactions.filter(t => t.type === 'income').forEach(t => { if (incomeDataMap[t.category] !== undefined) incomeDataMap[t.category] += t.amount; });
             if (incomePieChartInstance) incomePieChartInstance.destroy();
-
-            incomePieChartInstance = new Chart(incomeCtx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(incomeDataMap),
-                    datasets: [{
-                        data: Object.values(incomeDataMap),
-                        backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, color: '#334155' } },
-                        title: { display: true, text: 'Income Breakdown Pie Chart', color: '#1e293b', font: { size: 14 } }
-                    }
-                }
+            incomePieChartInstance = new Chart(document.getElementById('incomePieChart').getContext('2d'), {
+                type: 'pie', data: { labels: Object.keys(incomeDataMap), datasets: [{ data: Object.values(incomeDataMap), backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Income Breakdown' } } }
             });
 
-            const expenseCategories = categories.expense || [];
-            const expenseDataMap = {};
-            expenseCategories.forEach(cat => expenseDataMap[cat] = 0);
-
-            filteredTransactions.filter(t => t.type === 'expense').forEach(t => {
-                if (expenseDataMap[t.category] !== undefined) expenseDataMap[t.category] += t.amount;
-            });
-
-            const expenseCtx = document.getElementById('expensePieChart').getContext('2d');
+            const expenseDataMap = {}; (categories.expense || []).forEach(cat => expenseDataMap[cat] = 0);
+            filteredTransactions.filter(t => t.type === 'expense').forEach(t => { if (expenseDataMap[t.category] !== undefined) expenseDataMap[t.category] += t.amount; });
             if (expensePieChartInstance) expensePieChartInstance.destroy();
-
-            expensePieChartInstance = new Chart(expenseCtx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(expenseDataMap),
-                    datasets: [{
-                        data: Object.values(expenseDataMap),
-                        backgroundColor: ['#b91c1c', '#dc2626', '#f87171', '#fca5a5', '#fecaca'],
-                        borderColor: '#ffffff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, color: '#334155' } },
-                        title: { display: true, text: 'Expense Breakdown Pie Chart', color: '#1e293b', font: { size: 14 } }
-                    }
-                }
+            expensePieChartInstance = new Chart(document.getElementById('expensePieChart').getContext('2d'), {
+                type: 'pie', data: { labels: Object.keys(expenseDataMap), datasets: [{ data: Object.values(expenseDataMap), backgroundColor: ['#b91c1c', '#dc2626', '#f87171', '#fca5a5'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Expense Breakdown' } } }
             });
         }
 
         function exportDataBackup() {
-            const backupData = {
-                version: "1.5",
-                exportDate: new Date().toISOString(),
-                categories: categories,
-                paymentModes: paymentModes,
-                transactions: transactions,
-                loans: loans
-            };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `financial_tracker_backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ categories, paymentModes, transactions, loans }, null, 2));
+            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `backup_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(dl); dl.click(); dl.remove();
         }
 
         function importDataRestore() {
-            const fileInput = document.getElementById('restore-file-input');
-            if (!fileInput.files.length) {
-                alert('Please select a valid JSON backup file first.');
-                return;
-            }
-
-            const file = fileInput.files[0];
+            const file = document.getElementById('restore-file-input').files[0];
+            if (!file) return alert('Select a JSON backup file first.');
             const reader = new FileReader();
-
             reader.onload = async function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (!imported.categories || !imported.transactions || !imported.loans) {
-                        throw new Error('Invalid backup file structure.');
-                    }
-
-                    categories = imported.categories;
-                    paymentModes = normalizePaymentModes(imported.paymentModes);
-                    transactions = imported.transactions;
-                    loans = imported.loans;
-
-                    await saveDataToFirebase();
-                    initApp();
-                    alert('Data restored to cloud successfully!');
-                    switchSection('dashboard');
-                } catch (error) {
-                    alert('Failed to restore data. The file format is invalid or corrupted.');
-                }
+                const imported = JSON.parse(e.target.result);
+                categories = imported.categories; paymentModes = normalizePaymentModes(imported.paymentModes); transactions = imported.transactions; loans = imported.loans;
+                await saveDataToFirebase();
+                initApp();
+                alert('Data restored successfully!');
             };
-
             reader.readAsText(file);
         }
 
