@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Tracker with Custom Payment Modes & Cloud Storage</title>
+    <title>Financial Tracker with Local-First Offline Sync & Cloud Storage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -54,7 +54,10 @@
                 <div class="flex items-center gap-4">
                     <h1 class="text-2xl font-extrabold tracking-tight text-emerald-900">📊 Pro Accounting & Financial Tracker</h1>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div id="sync-status-indicator" class="text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-inner transition-all">
+                        🟢 Synced with Cloud
+                    </div>
                     <div id="balance-summary" class="text-sm font-semibold bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-2 rounded-xl shadow-inner">
                         Net Balance: <span id="net-balance" class="text-emerald-700 font-bold">₹0.00</span>
                     </div>
@@ -570,9 +573,19 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
 
+        // Enable Firestore offline persistence for robust caching
+        db.enablePersistence().catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn('Persistence failed: Multiple tabs open');
+            } else if (err.code == 'unimplemented') {
+                console.warn('Persistence not supported by browser');
+            }
+        });
+
         auth.signInAnonymously().catch((error) => console.error("Auth Error:", error));
 
         const SHARED_DOC_ID = "default_user_data";
+        const LOCAL_STORAGE_KEY = "pro_accounting_local_data_v2";
 
         let categories = { income: ['Salary', 'Investments', 'Gifts'], expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport'] };
         let paymentModes = [{ name: 'Cash', openingBalance: 0 }, { name: 'Bank', openingBalance: 0 }];
@@ -590,25 +603,116 @@
             return rawModes.map(pm => typeof pm === 'string' ? { name: pm, openingBalance: 0 } : { name: pm.name || 'Unnamed', openingBalance: Number(pm.openingBalance) || 0 });
         }
 
-        async function loadUserDataFromFirebase() {
+        // ==================== LOCAL-FIRST & FIREBASE SYNC ENGINE ====================
+        function loadDataFromLocalStorage() {
             try {
-                const doc = await db.collection('app_data').doc(SHARED_DOC_ID).get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    categories = data.categories || categories;
-                    paymentModes = normalizePaymentModes(data.paymentModes);
-                    transactions = data.transactions || [];
-                    loans = data.loans || [];
+                const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (localData) {
+                    const parsed = JSON.parse(localData);
+                    categories = parsed.categories || categories;
+                    paymentModes = normalizePaymentModes(parsed.paymentModes);
+                    transactions = parsed.transactions || [];
+                    loans = parsed.loans || [];
+                    return true;
                 }
-            } catch (err) { console.error('Load error:', err); }
+            } catch (err) {
+                console.error("Error reading LocalStorage:", err);
+            }
+            return false;
         }
 
-        async function saveDataToFirebase() {
+        function saveDatatoLocalStorage() {
             try {
-                await db.collection('app_data').doc(SHARED_DOC_ID).set({ categories, paymentModes, transactions, loans }, { merge: true });
-            } catch (err) { console.error('Sync error:', err); }
+                const payload = { categories, paymentModes, transactions, loans };
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.error("Error writing LocalStorage:", err);
+            }
         }
 
+        function updateSyncStatusUI(status) {
+            const indicator = document.getElementById('sync-status-indicator');
+            if (!indicator) return;
+
+            if (!navigator.onLine) {
+                indicator.className = 'text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 shadow-inner';
+                indicator.innerHTML = '🟠 Offline (Saved Locally)';
+            } else if (status === 'syncing') {
+                indicator.className = 'text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 shadow-inner animate-pulse';
+                indicator.innerHTML = '🔄 Syncing to Cloud...';
+            } else if (status === 'error') {
+                indicator.className = 'text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-800 shadow-inner';
+                indicator.innerHTML = '⚠️ Sync Failed (Retrying)';
+            } else {
+                indicator.className = 'text-xs px-3 py-2 rounded-xl font-semibold flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-inner';
+                indicator.innerHTML = '🟢 Synced with Cloud';
+            }
+        }
+
+        async function syncToFirebase() {
+            if (!navigator.onLine) {
+                updateSyncStatusUI('offline');
+                return;
+            }
+            updateSyncStatusUI('syncing');
+            try {
+                const payload = { categories, paymentModes, transactions, loans };
+                await db.collection('app_data').doc(SHARED_DOC_ID).set(payload, { merge: true });
+                updateSyncStatusUI('synced');
+            } catch (err) {
+                console.error('Firebase sync error:', err);
+                updateSyncStatusUI('error');
+            }
+        }
+
+        async function loadUserData() {
+            // 1. Load instantly from LocalStorage for 0ms lag and offline readiness
+            const hasLocal = loadDataFromLocalStorage();
+            if (hasLocal) {
+                refreshUI();
+            }
+
+            // 2. Fetch from Firebase in background to ensure latest state
+            if (navigator.onLine) {
+                try {
+                    const doc = await db.collection('app_data').doc(SHARED_DOC_ID).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        categories = data.categories || categories;
+                        paymentModes = normalizePaymentModes(data.paymentModes);
+                        transactions = data.transactions || [];
+                        loans = data.loans || [];
+                        saveDatatoLocalStorage(); // update local cache
+                        refreshUI();
+                        updateSyncStatusUI('synced');
+                    }
+                } catch (err) {
+                    console.error('Cloud load error (using local cache):', err);
+                    updateSyncStatusUI('offline');
+                }
+            } else {
+                updateSyncStatusUI('offline');
+            }
+        }
+
+        async function saveAndSync() {
+            // Instant local-first save
+            saveDatatoLocalStorage();
+            refreshUI();
+            // Background sync to Firebase
+            await syncToFirebase();
+        }
+
+        window.addEventListener('online', () => {
+            updateSyncStatusUI('synced');
+            syncToFirebase();
+        });
+
+        window.addEventListener('offline', () => {
+            updateSyncStatusUI('offline');
+        });
+
+        // ==================== APP CONTROLLERS ====================
         function switchSection(sectionId) {
             document.querySelectorAll('.section-panel').forEach(p => p.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(b => {
@@ -628,8 +732,7 @@
             else if (sectionId === 'dashboard') applyFilters();
         }
 
-        async function initApp() {
-            await loadUserDataFromFirebase();
+        function refreshUI() {
             updateCategoryOptions();
             updatePaymentModeOptions();
             applyFilters();
@@ -638,6 +741,10 @@
             renderBalanceSheet();
             renderCategoriesManager();
             renderPaymentModesManager();
+        }
+
+        async function initApp() {
+            await loadUserData();
         }
 
         function updateCategoryOptions() {
@@ -684,9 +791,13 @@
 
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
-                const storageRef = storage.ref(`receipts/${Date.now()}_${file.name}`);
-                const snapshot = await storageRef.put(file);
-                finalReceipt = await snapshot.ref.getDownloadURL();
+                try {
+                    const storageRef = storage.ref(`receipts/${Date.now()}_${file.name}`);
+                    const snapshot = await storageRef.put(file);
+                    finalReceipt = await snapshot.ref.getDownloadURL();
+                } catch (err) {
+                    console.warn("Receipt upload failed (offline or slow internet), proceeding without receipt or keeping old:", err);
+                }
             }
 
             const transactionId = editId ? Number(editId) : Date.now();
@@ -699,11 +810,9 @@
                 transactions.push(updatedTransaction);
             }
 
-            await saveAndRefresh();
+            await saveAndSync();
             resetTransactionForm();
-            alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded and receipt uploaded to Cloud Storage!');
-            
-            // Stay on the add-transaction section instead of switching to history
+            alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded successfully (stored locally & syncing to cloud)!');
             switchSection('add-transaction');
         });
 
@@ -763,7 +872,7 @@
             const openingBalance = parseFloat(document.getElementById('new-pm-opening').value) || 0;
             if (name && !paymentModes.some(p => p.name.toLowerCase() === name.toLowerCase())) {
                 paymentModes.push({ name, openingBalance });
-                await saveDataToFirebase();
+                await saveAndSync();
                 updatePaymentModeOptions();
                 renderPaymentModesManager();
                 this.reset();
@@ -786,7 +895,7 @@
             const pmObj = paymentModes.find(p => p.name === oldName);
             if (pmObj) { pmObj.name = newName; pmObj.openingBalance = newOpening; }
             transactions.forEach(t => { if (t.paymentMode === oldName) t.paymentMode = newName; });
-            await saveAndRefresh();
+            await saveAndSync();
             closeEditPaymentModeModal();
             renderPaymentModesManager();
         });
@@ -796,7 +905,7 @@
             if (confirm(`Delete mode "${pmName}"?`)) {
                 paymentModes = paymentModes.filter(p => p.name !== pmName);
                 transactions.forEach(t => { if (t.paymentMode === pmName) t.paymentMode = paymentModes[0].name; });
-                await saveAndRefresh();
+                await saveAndSync();
                 renderPaymentModesManager();
             }
         }
@@ -817,7 +926,7 @@
             const idx = categories[type].indexOf(oldName);
             if (idx !== -1) categories[type][idx] = newName;
             transactions.forEach(t => { if (t.type === type && t.category === oldName) t.category = newName; });
-            await saveAndRefresh();
+            await saveAndSync();
             closeEditCategoryModal();
             renderCategoriesManager();
         });
@@ -825,7 +934,7 @@
         async function deleteCategory(type, catName) {
             if (confirm(`Delete category "${catName}"?`)) {
                 categories[type] = categories[type].filter(c => c !== catName);
-                await saveAndRefresh();
+                await saveAndSync();
                 renderCategoriesManager();
             }
         }
@@ -842,8 +951,7 @@
             const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
             if (!name || isNaN(amount) || !date) return;
             loans.push({ id: Date.now(), date, name, amount, rate, history: [] });
-            await saveDataToFirebase();
-            renderBalanceSheet();
+            await saveAndSync();
             this.reset();
             document.getElementById('loan-date').valueAsDate = new Date();
         });
@@ -869,8 +977,7 @@
             loan.amount = Math.max(0, loan.amount - payAmount);
             if (!loan.history) loan.history = [];
             loan.history.push({ date: payDate, amount: payAmount });
-            await saveDataToFirebase();
-            renderBalanceSheet();
+            await saveAndSync();
             closePayLoanModal();
         });
 
@@ -892,8 +999,7 @@
         async function deleteLoan(id) {
             if (confirm("Delete loan?")) {
                 loans = loans.filter(l => l.id !== id);
-                await saveDataToFirebase();
-                renderBalanceSheet();
+                await saveAndSync();
             }
         }
 
@@ -903,7 +1009,7 @@
             const name = document.getElementById('new-cat-name').value.trim();
             if (name && !categories[type].includes(name)) {
                 categories[type].push(name);
-                await saveDataToFirebase();
+                await saveAndSync();
                 updateCategoryOptions();
                 renderCategoriesManager();
                 this.reset();
@@ -913,16 +1019,8 @@
         async function deleteTransaction(id) {
             if (confirm("Delete transaction?")) {
                 transactions = transactions.filter(t => t.id !== id);
-                await saveAndRefresh();
+                await saveAndSync();
             }
-        }
-
-        async function saveAndRefresh() {
-            await saveDataToFirebase();
-            applyFilters();
-            renderCategoryReport();
-            applyHistoryFilters();
-            renderBalanceSheet();
         }
 
         function getFilteredTransactions() {
@@ -944,7 +1042,6 @@
         function renderCategoryReport() {
             const startDate = document.getElementById('cat-rep-start').value;
             const endDate = document.getElementById('cat-rep-end').value;
-            const recordType = document.getElementById('cat-rep-type').value;
             document.getElementById('print-cat-range-label').textContent = `${startDate || 'Beginning'} to ${endDate || 'Present'}`;
 
             const filtered = transactions.filter(t => (!startDate || t.date >= startDate) && (!endDate || t.date <= endDate));
@@ -1102,8 +1199,8 @@
             reader.onload = async function(e) {
                 const imported = JSON.parse(e.target.result);
                 categories = imported.categories; paymentModes = normalizePaymentModes(imported.paymentModes); transactions = imported.transactions; loans = imported.loans;
-                await saveDataToFirebase();
-                initApp();
+                await saveAndSync();
+                refreshUI();
                 alert('Data restored successfully!');
             };
             reader.readAsText(file);
