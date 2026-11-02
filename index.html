@@ -69,6 +69,7 @@
             <div class="container mx-auto px-4 flex overflow-x-auto space-x-2 md:space-x-4 py-3">
                 <button onclick="switchSection('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 font-semibold rounded-xl bg-emerald-700 text-white transition whitespace-nowrap shadow-sm">Dashboard</button>
                 <button onclick="switchSection('add-transaction')" id="nav-add-transaction" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Add Transaction</button>
+                <button onclick="switchSection('person-accounts')" id="nav-person-accounts" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Person A/c</button>
                 <button onclick="switchSection('categories')" id="nav-categories" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Manage Definitions</button>
                 <button onclick="switchSection('reports')" id="nav-reports" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Reports & Charts</button>
                 <button onclick="switchSection('category-report')" id="nav-category-report" class="nav-btn px-4 py-2 font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition whitespace-nowrap">Category Summary</button>
@@ -187,6 +188,106 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </section>
+
+            <!-- PERSON ACCOUNTS SECTION -->
+            <section id="sec-person-accounts" class="section-panel hidden space-y-6">
+                <!-- Record Person Transaction Card -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-100 pb-3 mb-4 gap-3">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900">👤 Record Person Transaction (Khata Ledger)</h2>
+                            <p class="text-xs text-slate-500">Record loan/advance given or taken from related contacts. Automatically synced to Main History.</p>
+                        </div>
+                        <button type="button" onclick="pickContactForPersonForm()" class="bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                            📱 Pick from Device Contacts
+                        </button>
+                    </div>
+
+                    <form id="person-tx-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div class="md:col-span-1">
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Person Name / Contact</label>
+                            <div class="relative">
+                                <input type="text" id="person-name" list="persons-datalist" placeholder="Select or type person name" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
+                                <datalist id="persons-datalist"></datalist>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Transaction Type</label>
+                            <select id="person-tx-type" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600">
+                                <option value="given">GIVEN (Lent / Paid out - Money Out)</option>
+                                <option value="taken">TAKEN (Borrowed / Received - Money In)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
+                            <input type="number" id="person-tx-amount" step="0.01" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" placeholder="0.00" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Payment Mode</label>
+                            <select id="person-tx-mode" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required></select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Date</label>
+                            <input type="date" id="person-tx-date" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Remark / Purpose</label>
+                            <input type="text" id="person-tx-remark" placeholder="e.g., Short loan, project advance" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 focus:ring-2 focus:ring-emerald-600">
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <button type="submit" class="w-full bg-emerald-700 text-white font-semibold py-2.5 rounded-xl hover:bg-emerald-800 transition shadow-sm">
+                                Record Person Entry & Link to Main Ledger
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Summary Cards for Persons -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Total Receivable (Given)</span>
+                        <p id="person-summary-receivable" class="text-2xl font-extrabold text-emerald-700 mt-2">₹0.00</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <span class="text-xs font-bold text-rose-800 uppercase tracking-wider">Total Payable (Taken)</span>
+                        <p id="person-summary-payable" class="text-2xl font-extrabold text-rose-700 mt-2">₹0.00</p>
+                    </div>
+                    <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
+                        <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Net Outstanding Balance</span>
+                        <p id="person-summary-net" class="text-2xl font-extrabold text-slate-900 mt-2">₹0.00</p>
+                    </div>
+                </div>
+
+                <!-- Persons Account Table -->
+                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm backdrop-blur-md space-y-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center border-b border-slate-100 pb-3 gap-4">
+                        <h2 class="text-xl font-bold text-slate-900">📑 Person Account Summary & Balances</h2>
+                        <input type="text" id="person-search-box" placeholder="Search person..." oninput="renderPersonAccountsSummary()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-emerald-600">
+                    </div>
+
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
+                                    <th class="py-3 px-3">Person Name</th>
+                                    <th class="py-3 px-3 text-right">Total Given (₹)</th>
+                                    <th class="py-3 px-3 text-right">Total Taken (₹)</th>
+                                    <th class="py-3 px-3 text-right">Net Balance (₹)</th>
+                                    <th class="py-3 px-3 text-center">Status</th>
+                                    <th class="py-3 px-3 text-center no-print">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="person-summary-tbody" class="divide-y divide-slate-100 text-slate-700 font-light"></tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
 
@@ -505,6 +606,34 @@
     </div>
 
     <!-- Modals -->
+    <!-- Person Account Detail Ledger Modal -->
+    <div id="person-ledger-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
+        <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-2xl w-full relative shadow-xl space-y-4">
+            <button onclick="closePersonLedgerModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl hover:text-slate-700">&times;</button>
+            <h3 class="text-lg font-bold text-slate-900" id="person-ledger-title">Person Statement</h3>
+            <div class="flex justify-between items-center text-sm font-semibold bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span id="person-ledger-given" class="text-emerald-700">Given: ₹0.00</span>
+                <span id="person-ledger-taken" class="text-rose-700">Taken: ₹0.00</span>
+                <span id="person-ledger-net" class="text-slate-900 font-extrabold">Net: ₹0.00</span>
+            </div>
+            <div class="overflow-y-auto max-h-80 border border-slate-200 rounded-xl bg-white">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-slate-600 uppercase text-xs">
+                            <th class="py-2.5 px-3">Date</th>
+                            <th class="py-2.5 px-3">Type</th>
+                            <th class="py-2.5 px-3">Mode</th>
+                            <th class="py-2.5 px-3">Remark</th>
+                            <th class="py-2.5 px-3 text-right">Amount (₹)</th>
+                            <th class="py-2.5 px-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="person-ledger-tbody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div id="edit-category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex justify-center items-center z-50 no-print">
         <div class="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full relative shadow-xl">
             <button onclick="closeEditCategoryModal()" class="absolute top-3 right-4 text-slate-400 font-bold text-xl">&times;</button>
@@ -585,16 +714,18 @@
         auth.signInAnonymously().catch((error) => console.error("Auth Error:", error));
 
         const SHARED_DOC_ID = "default_user_data";
-        const LOCAL_STORAGE_KEY = "pro_accounting_local_data_v2";
+        const LOCAL_STORAGE_KEY = "pro_accounting_local_data_v4";
 
-        let categories = { income: ['Salary', 'Investments', 'Gifts'], expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport'] };
+        let categories = { income: ['Salary', 'Investments', 'Gifts', 'Person Account'], expense: ['Food', 'Rent', 'Utilities', 'Entertainment', 'Transport', 'Person Account'] };
         let paymentModes = [{ name: 'Cash', openingBalance: 0 }, { name: 'Bank', openingBalance: 0 }];
         let transactions = [];
         let loans = [];
+        let personTransactions = []; // Person Account records
         let incomePieChartInstance = null;
         let expensePieChartInstance = null;
 
         document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('person-tx-date').valueAsDate = new Date();
         document.getElementById('loan-date').valueAsDate = new Date();
         document.getElementById('bs-print-date').textContent = new Date().toLocaleDateString();
 
@@ -610,9 +741,12 @@
                 if (localData) {
                     const parsed = JSON.parse(localData);
                     categories = parsed.categories || categories;
+                    if (!categories.income.includes('Person Account')) categories.income.push('Person Account');
+                    if (!categories.expense.includes('Person Account')) categories.expense.push('Person Account');
                     paymentModes = normalizePaymentModes(parsed.paymentModes);
                     transactions = parsed.transactions || [];
                     loans = parsed.loans || [];
+                    personTransactions = parsed.personTransactions || [];
                     return true;
                 }
             } catch (err) {
@@ -623,7 +757,7 @@
 
         function saveDatatoLocalStorage() {
             try {
-                const payload = { categories, paymentModes, transactions, loans };
+                const payload = { categories, paymentModes, transactions, loans, personTransactions };
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
             } catch (err) {
                 console.error("Error writing LocalStorage:", err);
@@ -656,7 +790,7 @@
             }
             updateSyncStatusUI('syncing');
             try {
-                const payload = { categories, paymentModes, transactions, loans };
+                const payload = { categories, paymentModes, transactions, loans, personTransactions };
                 await db.collection('app_data').doc(SHARED_DOC_ID).set(payload, { merge: true });
                 updateSyncStatusUI('synced');
             } catch (err) {
@@ -666,23 +800,24 @@
         }
 
         async function loadUserData() {
-            // 1. Load instantly from LocalStorage for 0ms lag and offline readiness
             const hasLocal = loadDataFromLocalStorage();
             if (hasLocal) {
                 refreshUI();
             }
 
-            // 2. Fetch from Firebase in background to ensure latest state
             if (navigator.onLine) {
                 try {
                     const doc = await db.collection('app_data').doc(SHARED_DOC_ID).get();
                     if (doc.exists) {
                         const data = doc.data();
                         categories = data.categories || categories;
+                        if (!categories.income.includes('Person Account')) categories.income.push('Person Account');
+                        if (!categories.expense.includes('Person Account')) categories.expense.push('Person Account');
                         paymentModes = normalizePaymentModes(data.paymentModes);
                         transactions = data.transactions || [];
                         loans = data.loans || [];
-                        saveDatatoLocalStorage(); // update local cache
+                        personTransactions = data.personTransactions || [];
+                        saveDatatoLocalStorage();
                         refreshUI();
                         updateSyncStatusUI('synced');
                     }
@@ -696,23 +831,15 @@
         }
 
         async function saveAndSync() {
-            // Instant local-first save
             saveDatatoLocalStorage();
             refreshUI();
-            // Background sync to Firebase
             await syncToFirebase();
         }
 
-        window.addEventListener('online', () => {
-            updateSyncStatusUI('synced');
-            syncToFirebase();
-        });
+        window.addEventListener('online', () => { updateSyncStatusUI('synced'); syncToFirebase(); });
+        window.addEventListener('offline', () => { updateSyncStatusUI('offline'); });
 
-        window.addEventListener('offline', () => {
-            updateSyncStatusUI('offline');
-        });
-
-        // ==================== APP CONTROLLERS ====================
+        // ==================== CONTROLLERS & SECTIONS ====================
         function switchSection(sectionId) {
             document.querySelectorAll('.section-panel').forEach(p => p.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(b => {
@@ -721,13 +848,16 @@
             });
             document.getElementById(`sec-${sectionId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${sectionId}`);
-            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
-            activeBtn.classList.add('bg-emerald-700', 'text-white', 'shadow-sm');
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+                activeBtn.classList.add('bg-emerald-700', 'text-white', 'shadow-sm');
+            }
 
             if (sectionId === 'reports') applyFilters();
             else if (sectionId === 'category-report') renderCategoryReport();
             else if (sectionId === 'history') applyHistoryFilters();
             else if (sectionId === 'balance-sheet') renderBalanceSheet();
+            else if (sectionId === 'person-accounts') renderPersonAccountsSummary();
             else if (sectionId === 'categories') { renderCategoriesManager(); renderPaymentModesManager(); }
             else if (sectionId === 'dashboard') applyFilters();
         }
@@ -735,10 +865,12 @@
         function refreshUI() {
             updateCategoryOptions();
             updatePaymentModeOptions();
+            updatePersonDatalist();
             applyFilters();
             renderCategoryReport();
             applyHistoryFilters();
             renderBalanceSheet();
+            renderPersonAccountsSummary();
             renderCategoriesManager();
             renderPaymentModesManager();
         }
@@ -760,16 +892,206 @@
         }
 
         function updatePaymentModeOptions() {
-            const pmSelect = document.getElementById('payment-mode');
-            pmSelect.innerHTML = '';
-            paymentModes.forEach(pm => {
-                const option = document.createElement('option');
-                option.value = pm.name;
-                option.textContent = pm.name;
-                pmSelect.appendChild(option);
+            const pmSelects = [document.getElementById('payment-mode'), document.getElementById('person-tx-mode')];
+            pmSelects.forEach(select => {
+                if (!select) return;
+                select.innerHTML = '';
+                paymentModes.forEach(pm => {
+                    const option = document.createElement('option');
+                    option.value = pm.name;
+                    option.textContent = pm.name;
+                    select.appendChild(option);
+                });
             });
         }
 
+        function updatePersonDatalist() {
+            const datalist = document.getElementById('persons-datalist');
+            if (!datalist) return;
+            datalist.innerHTML = '';
+            const names = [...new Set(personTransactions.map(p => p.personName))];
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                datalist.appendChild(option);
+            });
+        }
+
+        // Device Contact List Picker Integration
+        async function pickContactForPersonForm() {
+            if ('contacts' in navigator && 'select' in navigator.contacts) {
+                try {
+                    const contacts = await navigator.contacts.select(['name'], { multiple: false });
+                    if (contacts && contacts.length > 0 && contacts[0].name && contacts[0].name.length > 0) {
+                        document.getElementById('person-name').value = contacts[0].name[0];
+                    }
+                } catch (err) {
+                    console.warn("Contacts API failed or cancelled:", err);
+                }
+            } else {
+                alert("Device Contacts Picker API is not supported in this browser environment. You can directly enter or select the Person Name.");
+            }
+        }
+
+        // Record Person Transaction & Always Link to Main Ledger
+        document.getElementById('person-tx-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('person-name').value.trim();
+            const type = document.getElementById('person-tx-type').value; // 'given' or 'taken'
+            const amount = parseFloat(document.getElementById('person-tx-amount').value);
+            const mode = document.getElementById('person-tx-mode').value;
+            const date = document.getElementById('person-tx-date').value;
+            const remark = document.getElementById('person-tx-remark').value.trim();
+
+            if (!name || isNaN(amount) || amount <= 0 || !date) return;
+
+            const pTxId = Date.now();
+            const mainTxId = pTxId + 1;
+
+            // 'given' => Money out (Expense), 'taken' => Money in (Income)
+            const mainType = type === 'given' ? 'expense' : 'income';
+            
+            // 1. Save directly to Main History
+            transactions.push({
+                id: mainTxId,
+                type: mainType,
+                category: 'Person Account',
+                paymentMode: mode,
+                amount: amount,
+                date: date,
+                remark: `[Person A/c: ${name}] ${remark || (type === 'given' ? 'Given/Lent' : 'Taken/Received')}`,
+                receipt: null
+            });
+
+            // 2. Save into Person Account Ledger linked via mainTxId
+            personTransactions.push({
+                id: pTxId,
+                personName: name,
+                type: type,
+                amount: amount,
+                paymentMode: mode,
+                date: date,
+                remark: remark || (type === 'given' ? 'Given' : 'Taken'),
+                mainTxId: mainTxId
+            });
+
+            await saveAndSync();
+            this.reset();
+            document.getElementById('person-tx-date').valueAsDate = new Date();
+            updatePaymentModeOptions();
+            alert(`Transaction recorded for ${name} & linked to Main Ledger successfully!`);
+        });
+
+        // Render Person Accounts Summary Table & Metric Cards
+        function renderPersonAccountsSummary() {
+            const tbody = document.getElementById('person-summary-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const searchQuery = document.getElementById('person-search-box').value.toLowerCase().trim();
+
+            const summaryMap = {};
+            personTransactions.forEach(pt => {
+                const name = pt.personName;
+                if (!summaryMap[name]) summaryMap[name] = { given: 0, taken: 0 };
+                if (pt.type === 'given') summaryMap[name].given += pt.amount;
+                else summaryMap[name].taken += pt.amount;
+            });
+
+            let totalGivenSum = 0, totalTakenSum = 0;
+            const names = Object.keys(summaryMap).filter(n => !searchQuery || n.toLowerCase().includes(searchQuery));
+
+            if (names.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-slate-400">No person account records found.</td></tr>`;
+            } else {
+                names.forEach(name => {
+                    const given = summaryMap[name].given;
+                    const taken = summaryMap[name].taken;
+                    const net = given - taken;
+
+                    totalGivenSum += given;
+                    totalTakenSum += taken;
+
+                    let statusBadge = '';
+                    if (net > 0) statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-bold">Gets Back (Receivable)</span>`;
+                    else if (net < 0) statusBadge = `<span class="bg-rose-100 text-rose-800 text-xs px-2.5 py-1 rounded-full font-bold">Owes (Payable)</span>`;
+                    else statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-bold">Settled</span>`;
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50">
+                            <td class="py-3 px-3 font-semibold text-slate-900">${name}</td>
+                            <td class="py-3 px-3 text-right font-semibold text-emerald-700">₹${given.toFixed(2)}</td>
+                            <td class="py-3 px-3 text-right font-semibold text-rose-700">₹${taken.toFixed(2)}</td>
+                            <td class="py-3 px-3 text-right font-extrabold ${net >= 0 ? 'text-emerald-800' : 'text-rose-800'}">₹${Math.abs(net).toFixed(2)}</td>
+                            <td class="py-3 px-3 text-center">${statusBadge}</td>
+                            <td class="py-3 px-3 text-center no-print space-x-2">
+                                <button onclick="openPersonLedgerModal('${name}')" class="text-indigo-700 font-semibold hover:underline">Ledger Statement</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('person-summary-receivable').textContent = `₹${totalGivenSum.toFixed(2)}`;
+            document.getElementById('person-summary-payable').textContent = `₹${totalTakenSum.toFixed(2)}`;
+            const netOutstanding = totalGivenSum - totalTakenSum;
+            const netEl = document.getElementById('person-summary-net');
+            netEl.textContent = `₹${Math.abs(netOutstanding).toFixed(2)} ${netOutstanding >= 0 ? '(Receivable)' : '(Payable)'}`;
+            netEl.className = `text-2xl font-extrabold mt-2 ${netOutstanding >= 0 ? 'text-emerald-700' : 'text-rose-700'}`;
+        }
+
+        // Person Ledger Modal logic
+        function openPersonLedgerModal(name) {
+            document.getElementById('person-ledger-title').textContent = `Ledger Statement: ${name}`;
+            const tbody = document.getElementById('person-ledger-tbody');
+            tbody.innerHTML = '';
+
+            const pList = personTransactions.filter(p => p.personName === name).sort((a, b) => new Date(b.date) - new Date(a.date));
+            let totalGiven = 0, totalTaken = 0;
+
+            pList.forEach(pt => {
+                if (pt.type === 'given') totalGiven += pt.amount;
+                else totalTaken += pt.amount;
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100">
+                        <td class="py-2.5 px-3">${pt.date}</td>
+                        <td class="py-2.5 px-3 uppercase font-semibold text-xs ${pt.type === 'given' ? 'text-emerald-700' : 'text-rose-700'}">${pt.type}</td>
+                        <td class="py-2.5 px-3">${pt.paymentMode || 'Cash'}</td>
+                        <td class="py-2.5 px-3">${pt.remark || '-'}</td>
+                        <td class="py-2.5 px-3 text-right font-bold ${pt.type === 'given' ? 'text-emerald-700' : 'text-rose-700'}">₹${pt.amount.toFixed(2)}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <button onclick="deletePersonTransaction(${pt.id})" class="text-rose-700 font-semibold text-xs">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('person-ledger-given').textContent = `Given: ₹${totalGiven.toFixed(2)}`;
+            document.getElementById('person-ledger-taken').textContent = `Taken: ₹${totalTaken.toFixed(2)}`;
+            const net = totalGiven - totalTaken;
+            document.getElementById('person-ledger-net').textContent = `Net Balance: ₹${Math.abs(net).toFixed(2)} ${net >= 0 ? '(Dr)' : '(Cr)'}`;
+
+            document.getElementById('person-ledger-modal').classList.remove('hidden');
+        }
+
+        function closePersonLedgerModal() {
+            document.getElementById('person-ledger-modal').classList.add('hidden');
+        }
+
+        async function deletePersonTransaction(pTxId) {
+            if (confirm("Delete this person entry? This will also remove it from the Main Ledger.")) {
+                const pt = personTransactions.find(p => p.id === pTxId);
+                if (pt && pt.mainTxId) {
+                    transactions = transactions.filter(t => t.id !== pt.mainTxId);
+                }
+                personTransactions = personTransactions.filter(p => p.id !== pTxId);
+                await saveAndSync();
+                closePersonLedgerModal();
+            }
+        }
+
+        // ==================== MAIN TRANSACTION LOGIC ====================
         document.getElementById('transaction-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const editId = document.getElementById('edit-transaction-id').value;
@@ -796,7 +1118,7 @@
                     const snapshot = await storageRef.put(file);
                     finalReceipt = await snapshot.ref.getDownloadURL();
                 } catch (err) {
-                    console.warn("Receipt upload failed (offline or slow internet), proceeding without receipt or keeping old:", err);
+                    console.warn("Receipt upload failed (offline or slow internet), proceeding without receipt:", err);
                 }
             }
 
@@ -812,7 +1134,7 @@
 
             await saveAndSync();
             resetTransactionForm();
-            alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded successfully (stored locally & syncing to cloud)!');
+            alert(editId ? 'Transaction updated successfully!' : 'Transaction recorded successfully!');
             switchSection('add-transaction');
         });
 
@@ -895,6 +1217,7 @@
             const pmObj = paymentModes.find(p => p.name === oldName);
             if (pmObj) { pmObj.name = newName; pmObj.openingBalance = newOpening; }
             transactions.forEach(t => { if (t.paymentMode === oldName) t.paymentMode = newName; });
+            personTransactions.forEach(pt => { if (pt.paymentMode === oldName) pt.paymentMode = newName; });
             await saveAndSync();
             closeEditPaymentModeModal();
             renderPaymentModesManager();
@@ -905,6 +1228,7 @@
             if (confirm(`Delete mode "${pmName}"?`)) {
                 paymentModes = paymentModes.filter(p => p.name !== pmName);
                 transactions.forEach(t => { if (t.paymentMode === pmName) t.paymentMode = paymentModes[0].name; });
+                personTransactions.forEach(pt => { if (pt.paymentMode === pmName) pt.paymentMode = paymentModes[0].name; });
                 await saveAndSync();
                 renderPaymentModesManager();
             }
@@ -1018,6 +1342,8 @@
 
         async function deleteTransaction(id) {
             if (confirm("Delete transaction?")) {
+                // Keep person accounts in sync if linked
+                personTransactions = personTransactions.filter(pt => pt.mainTxId !== id);
                 transactions = transactions.filter(t => t.id !== id);
                 await saveAndSync();
             }
@@ -1117,6 +1443,7 @@
         function updateMetrics(filteredTransactions) {
             let pmInc = {}, pmExp = {};
             paymentModes.forEach(pm => { pmInc[pm.name] = 0; pmExp[pm.name] = 0; });
+            
             transactions.forEach(t => {
                 const mode = t.paymentMode || paymentModes[0].name;
                 if (pmInc[mode] !== undefined) {
@@ -1124,6 +1451,7 @@
                 }
             });
 
+            // 1. Payment Modes Liquidity Ledger
             let totalNetBalance = 0;
             const pmContainer = document.getElementById('dash-payment-modes-container');
             pmContainer.innerHTML = '';
@@ -1133,6 +1461,70 @@
                 pmContainer.innerHTML += `<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"><span class="text-xs font-bold text-emerald-800 uppercase">${pm.name}</span><p class="text-3xl font-extrabold text-slate-900 mt-2">₹${bal.toFixed(2)}</p></div>`;
             });
             document.getElementById('net-balance').textContent = `₹${totalNetBalance.toFixed(2)}`;
+
+            // 2. Current Calendar Month Payment Metrics Calculation
+            const now = new Date();
+            const currentYearStr = now.getFullYear().toString();
+            const currentMonthStr = String(now.getMonth() + 1).padStart(2, '0');
+            const monthPrefix = `${currentYearStr}-${currentMonthStr}`;
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const currentMonthLabelEl = document.getElementById('current-month-label');
+            if (currentMonthLabelEl) {
+                currentMonthLabelEl.textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+            }
+
+            let monthPmInc = {}, monthPmExp = {};
+            paymentModes.forEach(pm => { monthPmInc[pm.name] = 0; monthPmExp[pm.name] = 0; });
+
+            transactions.forEach(t => {
+                if (t.date && t.date.startsWith(monthPrefix)) {
+                    const mode = t.paymentMode || paymentModes[0].name;
+                    if (monthPmInc[mode] !== undefined) {
+                        if (t.type === 'income') monthPmInc[mode] += t.amount;
+                        else if (t.type === 'expense') monthPmExp[mode] += t.amount;
+                    }
+                }
+            });
+
+            let totalMonthInc = 0, totalMonthExp = 0;
+            const monthIncContainer = document.getElementById('dash-month-income-modes');
+            const monthExpContainer = document.getElementById('dash-month-expense-modes');
+            monthIncContainer.innerHTML = '';
+            monthExpContainer.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const incVal = monthPmInc[pm.name] || 0;
+                const expVal = monthPmExp[pm.name] || 0;
+                totalMonthInc += incVal;
+                totalMonthExp += expVal;
+
+                monthIncContainer.innerHTML += `<div class="flex justify-between items-center text-sm"><span class="text-slate-600">${pm.name}:</span><span class="font-semibold text-emerald-700">₹${incVal.toFixed(2)}</span></div>`;
+                monthExpContainer.innerHTML += `<div class="flex justify-between items-center text-sm"><span class="text-slate-600">${pm.name}:</span><span class="font-semibold text-rose-700">₹${expVal.toFixed(2)}</span></div>`;
+            });
+
+            document.getElementById('dash-month-total-inc').textContent = `₹${totalMonthInc.toFixed(2)}`;
+            document.getElementById('dash-month-total-exp').textContent = `₹${totalMonthExp.toFixed(2)}`;
+
+            // 3. All-Time Cumulative Payment Metrics
+            let totalAllInc = 0, totalAllExp = 0;
+            const allIncContainer = document.getElementById('dash-all-income-modes');
+            const allExpContainer = document.getElementById('dash-all-expense-modes');
+            allIncContainer.innerHTML = '';
+            allExpContainer.innerHTML = '';
+
+            paymentModes.forEach(pm => {
+                const incVal = pmInc[pm.name] || 0;
+                const expVal = pmExp[pm.name] || 0;
+                totalAllInc += incVal;
+                totalAllExp += expVal;
+
+                allIncContainer.innerHTML += `<div class="flex justify-between items-center text-sm"><span class="text-slate-600">${pm.name}:</span><span class="font-semibold text-emerald-700">₹${incVal.toFixed(2)}</span></div>`;
+                allExpContainer.innerHTML += `<div class="flex justify-between items-center text-sm"><span class="text-slate-600">${pm.name}:</span><span class="font-semibold text-rose-700">₹${expVal.toFixed(2)}</span></div>`;
+            });
+
+            document.getElementById('dash-all-total-inc').textContent = `₹${totalAllInc.toFixed(2)}`;
+            document.getElementById('dash-all-total-exp').textContent = `₹${totalAllExp.toFixed(2)}`;
         }
 
         function renderTransactionsList(filteredTransactions) {
@@ -1173,7 +1565,7 @@
             filteredTransactions.filter(t => t.type === 'income').forEach(t => { if (incomeDataMap[t.category] !== undefined) incomeDataMap[t.category] += t.amount; });
             if (incomePieChartInstance) incomePieChartInstance.destroy();
             incomePieChartInstance = new Chart(document.getElementById('incomePieChart').getContext('2d'), {
-                type: 'pie', data: { labels: Object.keys(incomeDataMap), datasets: [{ data: Object.values(incomeDataMap), backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7'] }] },
+                type: 'pie', data: { labels: Object.keys(incomeDataMap), datasets: [{ data: Object.values(incomeDataMap), backgroundColor: ['#059669', '#10b981', '#34d399', '#6ee7b7', '#a7f3d0'] }] },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Income Breakdown' } } }
             });
 
@@ -1181,13 +1573,13 @@
             filteredTransactions.filter(t => t.type === 'expense').forEach(t => { if (expenseDataMap[t.category] !== undefined) expenseDataMap[t.category] += t.amount; });
             if (expensePieChartInstance) expensePieChartInstance.destroy();
             expensePieChartInstance = new Chart(document.getElementById('expensePieChart').getContext('2d'), {
-                type: 'pie', data: { labels: Object.keys(expenseDataMap), datasets: [{ data: Object.values(expenseDataMap), backgroundColor: ['#b91c1c', '#dc2626', '#f87171', '#fca5a5'] }] },
+                type: 'pie', data: { labels: Object.keys(expenseDataMap), datasets: [{ data: Object.values(expenseDataMap), backgroundColor: ['#b91c1c', '#dc2626', '#f87171', '#fca5a5', '#fef08a'] }] },
                 options: { responsive: true, plugins: { legend: { position: 'bottom' }, title: { display: true, text: 'Expense Breakdown' } } }
             });
         }
 
         function exportDataBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ categories, paymentModes, transactions, loans }, null, 2));
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ categories, paymentModes, transactions, loans, personTransactions }, null, 2));
             const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `backup_${new Date().toISOString().slice(0,10)}.json`);
             document.body.appendChild(dl); dl.click(); dl.remove();
         }
@@ -1198,7 +1590,13 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const imported = JSON.parse(e.target.result);
-                categories = imported.categories; paymentModes = normalizePaymentModes(imported.paymentModes); transactions = imported.transactions; loans = imported.loans;
+                categories = imported.categories || categories;
+                if (!categories.income.includes('Person Account')) categories.income.push('Person Account');
+                if (!categories.expense.includes('Person Account')) categories.expense.push('Person Account');
+                paymentModes = normalizePaymentModes(imported.paymentModes);
+                transactions = imported.transactions || [];
+                loans = imported.loans || [];
+                personTransactions = imported.personTransactions || [];
                 await saveAndSync();
                 refreshUI();
                 alert('Data restored successfully!');
